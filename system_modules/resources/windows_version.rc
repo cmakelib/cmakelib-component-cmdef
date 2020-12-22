@@ -1,0 +1,93 @@
+
+#include <Winver.h>
+
+#ifndef VERSION_MAJOR
+#define VERSION_MAJOR 1
+#endif
+
+#ifndef VERSION_MINOR
+#define VERSION_MINOR 0
+#endif
+
+#ifndef VERSION_PATCH
+#define VERSION_PATCH 0
+#endif
+
+#ifndef PRODUCT_COMMENTS
+#define PRODUCT_COMMENTS ""
+#endif
+
+#ifndef PRODUCT_FILE_DESCRIPTION
+#define PRODUCT_FILE_DESCRIPTION ""
+#endif
+
+#ifndef PRODUCT_ORIGINAL_FILENAME
+#define PRODUCT_ORIGINAL_FILENAME ""
+#endif
+
+#ifndef PRODUCT_INTERNAL_NAME
+#define PRODUCT_INTERNAL_NAME ""
+#endif
+
+
+
+#ifndef PRODUCT_COMPANY_NAME
+#error "Missing PRODUCT_COMPANY_NAME definition" 
+#endif
+
+#ifndef PRODUCT_COMPANY_COPYRIGHT
+#error "Missing PRODUCT_COMPANY_COPYRIGHT definition" 
+#endif
+
+#ifndef PRODUCT_BUNDLE
+#error "Missing PRODUCT_BUNDLE definition" 
+#endif
+
+#define xstr(x) str(x)
+#define str(x) #x
+
+#define _FILE_VERSION_RESOURCE VERSION_MAJOR,VERSION_MINOR,VERSION_PATCH,0
+#define _PRODUCT_VERSION_RESOURCE _FILE_VERSION_RESOURCE
+
+#define _PRODUCT_VERSION_RESOURCE_STR xstr(_PRODUCT_VERSION_RESOURCE)
+#define _FILE_VERSION_RESOURCE_STR xstr(_FILE_VERSION_RESOURCE)
+
+
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION    _FILE_VERSION_RESOURCE
+    PRODUCTVERSION _PRODUCT_VERSION_RESOURCE
+    FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK	
+    FILEFLAGS      0x0L
+    FILEOS         VOS__WINDOWS32
+#ifdef DLL
+    FILETYPE VFT_DLL
+#elseif STATIC
+    FILETYPE VFT_STATIC_LIB
+#else
+    FILETYPE VFT_APP
+#endif
+    FILESUBTYPE VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        // Use UK English and Unicode
+        BLOCK "080904b0"
+        BEGIN
+            VALUE "Comments",         PRODUCT_COMMENTS
+            VALUE "CompanyName",      PRODUCT_COMPANY_NAME
+            VALUE "FileDescription",  PRODUCT_FILE_DESCRIPTION
+            VALUE "FileVersion",      _FILE_VERSION_RESOURCE_STR
+            VALUE "InternalName",     PRODUCT_INTERNAL_NAME
+            VALUE "LegalCopyright",   PRODUCT_COMPANY_COPYRIGHT
+            VALUE "OriginalFilename", PRODUCT_ORIGINAL_FILENAME
+            VALUE "ProductName",      PRODUCT_BUNDLE
+            VALUE "ProductVersion",   _PRODUCT_VERSION_RESOURCE_STR
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        // We use UK English (0x0809) as language and Unicode (1200) as charset
+        VALUE "Translation", 0x0809, 1200
+    END
+END

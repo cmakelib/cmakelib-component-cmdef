@@ -1,0 +1,79 @@
+## Main
+#
+# Install library targets created by CMDEF_ADD_LIBRARY
+#
+
+IF(DEFINED CMDEF_INSTALL_MODULE)
+	RETURN()
+ENDIF()
+SET(CMDEF_INSTALL_MODULE 1)
+
+FIND_PACKAGE(CMLIB)
+
+
+
+##
+# Installs given target.
+#
+# If the CONFIGURATIONS is specified function installs
+# target only for given list of build types.
+# If no CONFIGURATIONS is specified that the target is installed
+# for each build type
+#
+# Workflow:
+# - If the given target has INSTALL_INCLUDE_DIRECTORIES property
+#   (created by CMDEF_ADD_LIBRARY)
+# - Set DESTINATION for all types
+# - Export this 
+#
+# <function>(
+#		TARGET <target>
+#		[CONFIGURATIONS <configurations>]
+# )
+#
+FUNCTION(CMDEF_INSTALL)
+	CMLIB_PARSE_ARGUMENTS(
+		MULTI_VALUE
+			CONFIGURATIONS
+		ONE_VALUE
+			TARGET
+		REQUIRED
+			TARGET
+		P_ARGN ${ARGN}
+	)
+
+	IF(NOT DEFINED __CONFIGURATIONS)
+		SET(__CONFIGURATIONS ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
+	ENDIF()
+
+	SET(original_target ${__TARGET})
+	
+	CMDEF_ADD_LIBRARY_CHECK(${__TARGET} cmdef_target)
+	IF(cmdef_target)
+		SET(original_target ${cmdef_target})
+		GET_PROPERTY(include_dirs TARGET ${original_target} PROPERTY CMDEF_INSTALL_INCLUDE_DIRECTORIES)
+		IF(NOT include_dirs STREQUAL "NOTFOUND")
+			TARGET_INCLUDE_DIRECTORIES(${original_target} INTERFACE $<INSTALL_INTERFACE:${CMDEF_INCLUDE_INSTALL_DIR}>)
+			FOREACH(dir IN LISTS include_dirs)
+				INSTALL(DIRECTORY ${dir}
+					CONFIGURATIONS ${__CONFIGURATIONS}
+					DESTINATION "${CMDEF_INCLUDE_INSTALL_DIR}"
+				)
+			ENDFOREACH()
+		ENDIF()
+	ENDIF()
+
+	INSTALL(TARGETS ${original_target}
+		CONFIGURATIONS ${__CONFIGURATIONS}
+		EXPORT ${original_target}
+		ARCHIVE DESTINATION "${CMDEF_LIBRARY_INSTALL_DIR}"
+		LIBRARY DESTINATION "${CMDEF_LIBRARY_INSTALL_DIR}"
+		RUNTIME DESTINATION "${CMDEF_BINARY_INSTALL_DIR}"
+		BUNDLE DESTINATION  "${CMDEF_BINARY_INSTALL_DIR}"
+		PUBLIC_HEADER DESTINATION "${CMDEF_INCLUDE_INSTALL_DIR}"
+	)
+	INSTALL(EXPORT ${original_target}
+		CONFIGURATIONS ${__CONFIGURATIONS}
+		DESTINATION "cmake/"
+	)
+ENDFUNCTION()

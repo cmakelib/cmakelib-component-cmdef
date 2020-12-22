@@ -1,0 +1,126 @@
+## Main
+#
+# Add executable
+#
+
+IF(DEFINED CMDEF_ADD_EXECUTABLE)
+	RETURN()
+ENDIF()
+
+SET(_CMDEF_ADD_EXECUTABLE_CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
+
+FIND_PACKAGE(CMLIB COMPONENTS CMUTIL)
+
+INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
+
+
+
+##
+# Add executable.
+#
+# WIN32 - create WIN32 application.
+# Ignored if the CMDEF_OS_WINDOWS is false
+#
+# MACOSX_BUNDLE - create macosx bundle.
+# Ignored if CMDEF_OS_MACOSX is false.
+#
+# OUTPUT_NAME - output base name. Name of the target
+# file after compile and link.
+# 
+# <function>(
+#		TARGET  <target>
+#		SOURCES <sources> M
+#		VERSION <version>
+#		[OUTPUT_NAME <output_name>]
+#		[WIN32         {ON|OFF}]
+#		[MACOSX_BUNDLE {ON|OFF}]
+#		[INCLUDE_DIRECTORIES <include_directories> M]
+# )
+#
+FUNCTION(CMDEF_ADD_EXECUTABLE)
+	CMLIB_PARSE_ARGUMENTS(
+		MULTI_VALUE
+			INCLUDE_DIRECTORIES
+			SOURCES
+		ONE_VALUE
+			VERSION
+			TARGET
+			OUTPUT_NAME
+		OPTIONS
+			WIN32 MACOSX_BUNDLE
+		REQUIRED
+			VERSION
+			SOURCES
+			TARGET
+		P_ARGN ${ARGN}
+	)
+
+	CMUTIL_VERSION_CHECK("${__VERSION}")
+
+	SET(exec_flag)
+	IF(CMDEF_OS_WINDOWS AND __WIN32)
+		SET(exec_flag WIN32)
+	ELSEIF(CMDEF_OS_MACOSX AND __MACOSX_BUNDLE)
+		SET(exec_flag MACOSX_BUNDLE)
+	ENDIF()
+
+	SET(output_name ${__TARGET})
+	IF(DEFINED __OUTPUT_NAME)
+		SET(output_name "${__OUTPUT_NAME}")
+	ENDIF()
+
+	SET(package_name_suffix)
+	IF(DEFINED CMAKE_BUILD_TYPE)
+		IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+			SET(package_name_suffix "${CMDEF_EXECUTABLE_NAME_DEBUG_SUFFIX}")
+		ENDIF()
+	ELSE()
+		SET(package_name_suffix "$<$<CONFIG:DEBUG>:${CMDEF_EXECUTABLE_NAME_DEBUG_SUFFIX}>")
+	ENDIF()
+
+	ADD_EXECUTABLE(${__TARGET} ${exec_flag} ${__SOURCES})
+	SET_TARGET_PROPERTIES(${__TARGET}
+		PROPERTIES
+			OUTPUT_NAME "${output_name}${package_name_suffix}"
+	)
+
+	IF(DEFINED __INCLUDE_DIRECTORIES)
+		TARGET_INCLUDE_DIRECTORIES(${__TARGET} PRIVATE ${__INCLUDE_DIRECTORIES})
+	ENDIF()
+
+	IF(CMDEF_OS_WINDOWS)
+		_CMDEF_ADD_EXECUTABLE_WINDOWS_SETTING(${__TARGET} ${__VERSION})
+	ENDIF()
+ENDFUNCTION()
+
+
+
+## Helper
+#
+# Setting specific only for Windows
+#
+# <function> (
+# )
+#
+FUNCTION(_CMDEF_ADD_EXECUTABLE_WINDOWS_SETTING target_lib version)
+	SET(msvc_runtime_type)
+	IF(NOT CMDEF_WINDOWS_STATIC_RUNTIME)
+		SET(msvc_runtime_type DLL)
+	ENDIF()
+	SET_PROPERTY(TARGET ${target_lib}
+		PROPERTY
+			MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:DEBUG>:Debug>${msvc_runtime_type}"
+	)
+	CMUTIL_VERSION_SPLIT(version ${version})
+	CMDEF_RESOURCE_WINDOWS(
+		RESOURCE_TARGET ${target_lib}
+		RESOURCE_FILE "${_CMDEF_ADD_EXECUTABLE_CURRENT_LIST_DIR}/resources/windows_version.rc"
+		DEFINITIONS
+			VERSION_MAJOR  ${version_MAJOR}
+			VERSION_MINOR  ${version_MINOR}
+			VERSION_PATCH  ${version_PATCH}
+			PRODUCT_BUNDLE "$<TARGET_NAME:${target_lib}>"
+			PRODUCT_COMPANY_COPYRIGHT "${CMDEF_ENV_DESCRIPTION_COPYRIGHT}"
+			PRODUCT_COMPANY_NAME      "${CMDEF_ENV_DESCRIPTION_COMPANY_NAME}"
+	)
+ENDFUNCTION()
