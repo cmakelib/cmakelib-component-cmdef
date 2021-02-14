@@ -1,8 +1,8 @@
 
 # CMake-lib Basedef component
 
-Provide consistent setting for build environment.
-Simplify and maintain build option, libraries and executables.
+CMake-lib provides consistent setting for built environment.
+It simplifies and maintains built option, libraries and executables.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ For example we have CMake project for building chrome browser.
 Browser is represented by one executable called `chrome`. That executable
 must have own target in CMake project.
 
-By that target other project properties is referenced - installer name, application name, documentation etc.
+By that target other project properties are referenced - installer name, application name, documentation etc.
 We call this type of target as 'main target' (the 'object' for which we
 create the CMake project)
 
@@ -32,13 +32,13 @@ In the library the 'main target' is represented by MAIN_TARGET variable/paramete
 
 ## Usage
 
-Let GIT_URI is a GIT URI of this repository.
+Let GIT_URI be a GIT URI of this repository.
 
 	FIND_PACKAGE(CMLIB COMPONENTS BASEDEF)
 
 ### Set build defaults
 
-Set and maintain build/link flags and global wide definitions
+CMake-lib sets and maintains build/link flags and global wide definitions
 
 Component workflow
 
@@ -50,12 +50,12 @@ examples can be found at [example] directory
 
 ## Function list
 
-Each entry in list represents one functionality for CMake.
+Each entry in list represents one feature for CMake.
 
-Most of functions are just wrappers which enclosures base functionality of
+Most of functions are just wrappers which enclosures base feature of
 CMake.
 
-Detailed documentation for each func. can be found at appropriate module.
+Detailed documentation for each function can be found at appropriate module.
 
 - [CMDEF_ADD_LIBRARY.cmake]
 - [CMDEF_ADD_EXECUTABLE.cmake]
