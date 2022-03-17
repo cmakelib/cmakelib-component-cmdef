@@ -165,7 +165,8 @@ MACRO(_CMDEF_ENV_SET_OS)
 	MESSAGE(STATUS "System name: ${system_name}")
 	SET(os_name "")
 	IF("${system_name}" STREQUAL "Darwin" OR
-			"${system_name}" STREQUAL "Mac OS X")
+			"${system_name}" STREQUAL "Mac OS X" OR
+			"${system_name}" STREQUAL "macOS")
 		SET(os_name "macosx")
 		SET(_OS_MACOSX  ON)
 		SET(_OS_POSIX   ON)
