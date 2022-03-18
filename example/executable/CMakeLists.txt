@@ -3,26 +3,15 @@
 #
 #
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.16)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.18)
 SET(CMAKE_PROJECT_NAME executable)
 PROJECT(${CMAKE_PROJECT_NAME})
-
-#
-# Initialize CMDEF library
-#
-# In real project we use:
-#	FIND_PACKAGE(CMLIB COMPONENTS CMDEF)
-#
-# In our example we just add GIT_ROOT of the containing
-# repository to CMAKE_MODULE_PATH.
-#
-LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../../")
 
 #
 # Use CMDEF library in same manner as COMPONENT mechanism
 # in CMLIB
 #
-FIND_PACKAGE(BASEDEF)
+FIND_PACKAGE(CMLIB COMPONENTS CMDEF)
 
 
 
@@ -97,7 +86,7 @@ CMDEF_INSTALL(TARGET cmake_executable)
 #
 CMDEF_PACKAGE(
 	MAIN_TARGET executable
-	VERSION 1.0.98    # It's package version
+	VERSION 1.0.98    # It's a package version
 )
 
 #

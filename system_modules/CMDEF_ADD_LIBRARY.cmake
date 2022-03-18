@@ -69,7 +69,7 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 	_CMDEF_ADD_LIBRARY_CHECK_TYPE(${__TYPE})
 
 	IF(TARGET ${__LIBRARY_GROUP})
-		MESSAGE(FATAL_ERROR "Target '${__LIBRARY_GROUP}' for already exist!")
+		MESSAGE(FATAL_ERROR "Target '${__LIBRARY_GROUP}' already exist!")
 	ENDIF()
 
 	SET(target_object_lib ${__LIBRARY_GROUP}-object)

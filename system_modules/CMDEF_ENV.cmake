@@ -15,11 +15,12 @@ SET(CMDEF_ENV_MODULE 1)
 FIND_PACKAGE(CMLIB)
 
 #
-# Variables which is defined only as local.
+# Variable that is defined only as local.
 # Is not intended to be modified by user
 #
-SET(_CMDEF_ENV_ARCH_AMD64 "amd64")
-SET(_CMDEF_ENV_ARCH_X86 "x86")
+# It holds list of supported/well_tested architectures
+#
+SET(_CMDEF_ENV_SUPPORTED_ARCH_LIST "x86-64" "x86" "aarch64")
 
 
 
@@ -57,7 +58,7 @@ FUNCTION(CMDEF_ENV_INIT)
 	ENDIF()
 
 	SET(CMDEF_MULTICONF_FOLDER_NAME "CMDEF"
-		CACHE BOOL
+		CACHE PATH
 		"Name of folder for CMDEF targets in multiconfig like Visual Studio"
 	)
 
@@ -161,36 +162,42 @@ ENDMACRO()
 # )
 #
 MACRO(_CMDEF_ENV_SET_OS)
-	CMAKE_HOST_SYSTEM_INFORMATION(RESULT system_name QUERY OS_NAME)
-	MESSAGE(STATUS "System name: ${system_name}")
+	MESSAGE(STATUS "System name: ${CMAKE_SYSTEM_NAME}")
 	SET(os_name "")
-	IF("${system_name}" STREQUAL "Darwin" OR
+	IF("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin" OR
 			"${system_name}" STREQUAL "Mac OS X" OR
 			"${system_name}" STREQUAL "macOS")
-		SET(os_name "macosx")
+		SET(os_name "macos")
+	ELSEIF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+		SET(os_name "linux")
+	ELSEIF(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+		SET(os_name "windows")
+	ENDIF()
+
+	SET(CMDEF_OS_NAME ${os_name}
+		CACHE STRING
+		"String, normalized representation of OS name"
+	)
+	IF(${CMDEF_OS_NAME} STREQUAL "macos")
 		SET(_OS_MACOSX  ON)
 		SET(_OS_POSIX   ON)
 		SET(_OS_WINDOWS OFF)
 		SET(_OS_LINUX   OFF)
 		SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
-	ELSEIF(${system_name} STREQUAL "Linux")
-		SET(os_name "linux")
+	ELSEIF(${CMDEF_OS_NAME} STREQUAL "linux")
 		SET(_OS_LINUX ON)
 		SET(_OS_POSIX ON)
 		SET(_OS_WINDOWS OFF)
 		SET(_OS_MACOSX  OFF)
-	ELSEIF(${system_name} STREQUAL "Windows")
-		SET(os_name "windows")
+	ELSEIF(${CMDEF_OS_NAME} STREQUAL "windows")
 		SET(_OS_LINUX OFF)
 		SET(_OS_POSIX OFF)
 		SET(_OS_WINDOWS ON)
 		SET(_OS_MACOSX  OFF)
 		SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+	ELSE()
+		MESSAGE(FATAL_ERROR "Unsupported CMDEF_OS_NAME value: ${CMDEF_OS_NAME}")
 	ENDIF()
-	SET(CMDEF_OS_NAME ${os_name}
-		CACHE STRING
-		"String representation of OS name"
-	)
 
 	STRING(SUBSTRING "${CMDEF_OS_NAME}" 0 3 os_name_short)
 	SET(CMDEF_OS_NAME_SHORT ${os_name_short}
@@ -222,15 +229,46 @@ MACRO(_CMDEF_ENV_SET_OS)
 		"Do we have POSIX OS?"
 	)
 
-	_CMDEF_ENV_GET_ARCH(arch)
-	IF((arch STREQUAL "unknown") AND (NOT DEFINED CMAKE_SCRIPT_MODE_FILE))
-		MESSAGE(FATAL_ERROR "Cannot determine system architecture!")
+	IF(NOT CMDEF_ARCHITECTURE)
+		_CMDEF_ENV_GET_ARCH(arch)
+		SET(CMDEF_ARCHITECTURE ${arch}
+			CACHE STRING
+			"Achitecture for which we will compile"
+		)
 	ENDIF()
-	SET(CMDEF_ARCHITECTURE ${arch}
-		CACHE STRING
-		"Achitecture for which we will compile"
-	)
-	MESSAGE(STATUS "Architecture: ${arch}")
+	MESSAGE(STATUS "Architecture: ${CMDEF_ARCHITECTURE}")
+	LIST(FIND _CMDEF_ENV_SUPPORTED_ARCH_LIST "${CMDEF_ARCHITECTURE}" arch_found)
+	IF(arch_found EQUAL -1)
+		MESSAGE(WARNING "Unsupported Architecture: ${CMDEF_ARCHITECTURE}")
+	ENDIF()
+
+	IF (NOT CMDEF_DISTRO_ID)
+		SET(distro_id)
+		IF($ENV{CMDEF_DISTRO_ID})
+			SET(distro_id "$ENV{CMDEF_DISTRO_ID}")
+		ELSE()
+			_CMDEF_ENV_GET_DISTRO_ID(distro_id)
+		ENDIF()
+		SET(CMDEF_DISTRO_ID ${distro_id}
+			CACHE STRING
+			"Distro ID for which we will compile"
+		)
+	ENDIF()
+	MESSAGE(STATUS "Distro ID: ${CMDEF_DISTRO_ID}")
+
+	IF (NOT CMDEF_DISTRO_VERSION_ID)
+		SET(version_id)
+		IF($ENV{CMDEF_DISTRO_VERSION_ID})
+			SET(version_id "$ENV{CMDEF_DISTRO_VERSION_ID}")
+		ELSE()
+			_CMDEF_ENV_GET_DISTRO_VERSION_ID(version_id)
+		ENDIF()
+		SET(CMDEF_DISTRO_VERSION_ID ${version_id}
+			CACHE STRING
+			"Distro Version ID for which we will compile"
+		)
+	ENDIF()
+	MESSAGE(STATUS "Distro Version ID: ${CMDEF_DISTRO_VERSION_ID}")
 ENDMACRO()
 
 
@@ -327,16 +365,69 @@ ENDFUNCTION()
 #		<arch_output_var_name>
 # )
 #
-MACRO(_CMDEF_ENV_GET_ARCH arch)
-	IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
-		SET(${arch} "${_CMDEF_ENV_ARCH_AMD64}")
-	ELSEIF(CMAKE_SIZEOF_VOID_P EQUAL 4)
-		SET(${arch} "${_CMDEF_ENV_ARCH_X86}")
-	ELSE()
-		SET(${arch} "unknown")
+FUNCTION(_CMDEF_ENV_GET_ARCH arch)
+	FIND_PROGRAM(CMDEF_UNAME uname REQUIRED)
+	EXECUTE_PROCESS(COMMAND "${CMDEF_UNAME}" -m
+		OUTPUT_VARIABLE _arch
+		RESULT_VARIABLE result
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	IF(NOT (result EQUAL 0))
+		MESSAGE(FATAL_ERROR "Cannot determine architecture! Set up CMDEF_ARCHITECTURE manually or repair uname")
 	ENDIF()
-ENDMACRO()
+	STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _arch_mapped "${_arch}")
+	STRING(TOLOWER "${_arch_mapped}" _arch_normalized)
+	SET(${arch} "${_arch_normalized}" PARENT_SCOPE)
+ENDFUNCTION()
 
+
+## Helper
+#
+# Determine distribution ID
+#
+# <function>(
+#		<distro_id_var_name>
+# )
+#
+FUNCTION(_CMDEF_ENV_GET_DISTRO_ID distro_id)
+	FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
+	EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -i -s
+		OUTPUT_VARIABLE _distro_id
+		RESULT_VARIABLE result
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	IF(NOT (result EQUAL 0))
+		MESSAGE(FATAL_ERROR "Cannot determine distro ID! Set up CMDEF_DISTRO_ID manually or repair lsb_release")
+	ENDIF()
+	STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _distro_id_mapped "${_distro_id}")
+	STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
+	SET(${distro_id} "${_distro_id_normalized}" PARENT_SCOPE)
+ENDFUNCTION()
+
+
+
+## Helper
+#
+# Determine Distro Version ID
+#
+# <function>(
+#		<version_id_var_name>
+# )
+#
+FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
+	FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
+	EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -r -s
+		OUTPUT_VARIABLE _version_id
+		RESULT_VARIABLE result
+		OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	IF(NOT (result EQUAL 0))
+		MESSAGE(FATAL_ERROR "Cannot determine version ID! Set up CMDEF_DISTRO_VERSION_ID manually or repair lsb_release")
+	ENDIF()
+	STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _version_id_mapped "${_version_id}")
+	STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
+	SET(${version_id} "${_version_id_normalized}" PARENT_SCOPE)
+ENDFUNCTION()
 
 
 CMDEF_ENV_INIT()

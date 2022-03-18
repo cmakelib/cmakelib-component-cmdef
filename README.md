@@ -34,7 +34,7 @@ In the library the 'main target' is represented by MAIN_TARGET variable/paramete
 
 Let GIT_URI be a GIT URI of this repository.
 
-	FIND_PACKAGE(CMLIB COMPONENTS BASEDEF)
+	FIND_PACKAGE(CMLIB COMPONENTS CMDEF)
 
 ### Set build defaults
 
@@ -67,6 +67,9 @@ Detailed documentation for each function can be found at appropriate module.
 - [CMDEF_LINK_OPTION.cmake]
 - [CMDEF_PACKAGE.cmake]
 
+## Config Variables
+
+Configuration variables detailed desc. for the library is located at [doc/CacheVariables.md]
 
 ## Coding standards
 
@@ -84,4 +87,5 @@ Detailed documentation for each function can be found at appropriate module.
 [CMDEF_INSTALL.cmake]: system_modules/CMDEF_INSTALL.cmake
 [CMDEF_LINK_OPTION.cmake]: system_modules/CMDEF_LINK_OPTION.cmake
 [CMDEF_PACKAGE.cmake]: system_modules/CMDEF_PACKAGE.cmake
+[doc/CacheVariables.md]: doc/CacheVariables.md
 [example]: example/
