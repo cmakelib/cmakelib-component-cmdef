@@ -89,6 +89,10 @@ MACRO(_CMDEF_ENV_SET_PACKAGE os_name)
 		CACHE STRING
 		"Suffix for library name if the target is configured in debug"
 	)
+	SET(CMDEF_LIBRARY_NAME_DEV_SUFFIX "-dev"
+		CACHE STRING
+		"Suffix for development library"
+	)
 	SET(CMDEF_EXECUTABLE_NAME_DEBUG_SUFFIX "d"
 		CACHE STRING
 		"Suffix for executable name if the target is configured in debug"
@@ -162,7 +166,7 @@ ENDMACRO()
 # )
 #
 MACRO(_CMDEF_ENV_SET_OS)
-	CMAKE_HOST_SYSTEM_INFORMATION(RESULT _os_name QUERY OS_NAME	)
+	CMAKE_HOST_SYSTEM_INFORMATION(RESULT _os_name QUERY OS_NAME)
 	MESSAGE(STATUS "System name: ${_os_name}")
 	SET(os_name "")
 	IF("${_os_name}" STREQUAL "Darwin" OR
