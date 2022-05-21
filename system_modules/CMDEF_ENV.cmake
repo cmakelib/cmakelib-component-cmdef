@@ -183,7 +183,8 @@ MACRO(_CMDEF_ENV_SET_OS)
 		CACHE STRING
 		"String, normalized representation of OS name"
 	)
-	IF("${CMDEF_OS_NAME}" STREQUAL "macos")
+	IF("${CMDEF_OS_NAME}" STREQUAL "macos" OR
+			"${CMDEF_OS_NAME}" STREQUAL "macOS")
 		SET(_OS_MACOSX  ON)
 		SET(_OS_POSIX   ON)
 		SET(_OS_WINDOWS OFF)
@@ -371,18 +372,30 @@ ENDFUNCTION()
 # )
 #
 FUNCTION(_CMDEF_ENV_GET_ARCH arch)
-	FIND_PROGRAM(CMDEF_UNAME uname REQUIRED)
-	EXECUTE_PROCESS(COMMAND "${CMDEF_UNAME}" -m
-		OUTPUT_VARIABLE _arch
-		RESULT_VARIABLE result
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	IF(NOT (result EQUAL 0))
-		MESSAGE(FATAL_ERROR "Cannot determine architecture! Set up CMDEF_ARCHITECTURE manually or repair uname")
+	IF(CMDEF_OS_WINDOWS)
+		SET(${arch} "x86-64" PARENT_SCOPE)
+		RETURN()
 	ENDIF()
-	STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _arch_mapped "${_arch}")
-	STRING(TOLOWER "${_arch_mapped}" _arch_normalized)
-	SET(${arch} "${_arch_normalized}" PARENT_SCOPE)
+	IF(CMDEF_OS_MACOSX)
+		SET(${arch} "aplsil" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	IF(CMDEF_OS_LINUX)
+		FIND_PROGRAM(CMDEF_UNAME uname REQUIRED)
+		EXECUTE_PROCESS(COMMAND "${CMDEF_UNAME}" -m
+			OUTPUT_VARIABLE _arch
+			RESULT_VARIABLE result
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+		IF(NOT (result EQUAL 0))
+			MESSAGE(FATAL_ERROR "Cannot determine architecture! Set up CMDEF_ARCHITECTURE manually or repair uname")
+		ENDIF()
+		STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _arch_mapped "${_arch}")
+		STRING(TOLOWER "${_arch_mapped}" _arch_normalized)
+		SET(${arch} "${_arch_normalized}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	MESSAGE(FATAL_ERROR "Cannot get architecture for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
 
 
@@ -395,18 +408,30 @@ ENDFUNCTION()
 # )
 #
 FUNCTION(_CMDEF_ENV_GET_DISTRO_ID distro_id)
-	FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
-	EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -i -s
-		OUTPUT_VARIABLE _distro_id
-		RESULT_VARIABLE result
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	IF(NOT (result EQUAL 0))
-		MESSAGE(FATAL_ERROR "Cannot determine distro ID! Set up CMDEF_DISTRO_ID manually or repair lsb_release")
+	IF(CMDEF_OS_WINDOWS)
+		SET(${distro_id} "windows" PARENT_SCOPE)
+		RETURN()
 	ENDIF()
-	STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _distro_id_mapped "${_distro_id}")
-	STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
-	SET(${distro_id} "${_distro_id_normalized}" PARENT_SCOPE)
+	IF(CMDEF_OS_MACOSX)
+		SET(${distro_id} "macos" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	IF(CMDEF_OS_LINUX)
+		FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
+		EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -i -s
+			OUTPUT_VARIABLE _distro_id
+			RESULT_VARIABLE result
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+		IF(NOT (result EQUAL 0))
+			MESSAGE(FATAL_ERROR "Cannot determine distro ID! Set up CMDEF_DISTRO_ID manually or repair lsb_release")
+		ENDIF()
+		STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _distro_id_mapped "${_distro_id}")
+		STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
+		SET(${distro_id} "${_distro_id_normalized}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	MESSAGE(FATAL_ERROR "Cannot get distro id for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
 
 
