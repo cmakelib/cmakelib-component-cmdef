@@ -170,8 +170,8 @@ MACRO(_CMDEF_ENV_SET_OS)
 	MESSAGE(STATUS "System name: ${_os_name}")
 	SET(os_name "")
 	IF("${_os_name}" STREQUAL "Darwin" OR
-			"${system_name}" STREQUAL "Mac OS X" OR
-			"${system_name}" STREQUAL "macOS")
+			"${_os_name}" STREQUAL "Mac OS X" OR
+			"${_os_name}" STREQUAL "macOS")
 		SET(os_name "macos")
 	ELSEIF("${_os_name}" STREQUAL "Linux")
 		SET(os_name "linux")
@@ -183,8 +183,7 @@ MACRO(_CMDEF_ENV_SET_OS)
 		CACHE STRING
 		"String, normalized representation of OS name"
 	)
-	IF("${CMDEF_OS_NAME}" STREQUAL "macos" OR
-			"${CMDEF_OS_NAME}" STREQUAL "macOS")
+	IF("${CMDEF_OS_NAME}" STREQUAL "macos")
 		SET(_OS_MACOSX  ON)
 		SET(_OS_POSIX   ON)
 		SET(_OS_WINDOWS OFF)
