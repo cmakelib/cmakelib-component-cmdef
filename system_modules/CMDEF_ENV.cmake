@@ -446,18 +446,30 @@ ENDFUNCTION()
 # )
 #
 FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
-	FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
-	EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -r -s
-		OUTPUT_VARIABLE _version_id
-		RESULT_VARIABLE result
-		OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	IF(NOT (result EQUAL 0))
-		MESSAGE(FATAL_ERROR "Cannot determine version ID! Set up CMDEF_DISTRO_VERSION_ID manually or repair lsb_release")
+	IF(CMDEF_OS_WINDOWS)
+		SET(${version_id} "${CMAKE_SYSTEM_VERSION}" PARENT_SCOPE)
+		RETURN()
 	ENDIF()
-	STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _version_id_mapped "${_version_id}")
-	STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
-	SET(${version_id} "${_version_id_normalized}" PARENT_SCOPE)
+	IF(CMDEF_OS_MACOSX)
+		SET(${version_id} "${CMAKE_SYSTEM_VERSION}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	IF(CMDEF_OS_LINUX)
+		FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
+		EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -r -s
+			OUTPUT_VARIABLE _version_id
+			RESULT_VARIABLE result
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+		IF(NOT (result EQUAL 0))
+			MESSAGE(FATAL_ERROR "Cannot determine version ID! Set up CMDEF_DISTRO_VERSION_ID manually or repair lsb_release")
+		ENDIF()
+		STRING(REGEX REPLACE "[^a-zA-Z0-9]" "-" _version_id_mapped "${_version_id}")
+		STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
+		SET(${version_id} "${_version_id_normalized}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	MESSAGE(FATAL_ERROR "Cannot get distro id for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
 
 
