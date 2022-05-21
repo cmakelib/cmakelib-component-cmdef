@@ -20,7 +20,9 @@ FIND_PACKAGE(CMLIB)
 #
 # It holds list of supported/well_tested architectures
 #
-SET(_CMDEF_ENV_SUPPORTED_ARCH_LIST "x86-64" "x86" "aarch64")
+# aplsil architecture referes to Apple silicon 
+#
+SET(_CMDEF_ENV_SUPPORTED_ARCH_LIST "x86-64" "x86" "aarch64" "aplsil")
 
 
 
