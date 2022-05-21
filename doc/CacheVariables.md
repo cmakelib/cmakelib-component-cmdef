@@ -122,7 +122,7 @@ File extension of the Shared library.
 
 Linux shared library extension.
 
-## CMDEF_LIBRARY_NAME_SUFFIX_SHARED_MACOSX:STRING=.dylib
+## CMDEF_LIBRARY_NAME_SUFFIX_SHARED_MACOS:STRING=.dylib
 
 Mac OS shared library extension.
 
@@ -134,7 +134,7 @@ Windows shared library extension.
 
 ## CMDEF_LIBRARY_NAME_SUFFIX_STATIC_LINUX:STRING=.a
 
-## CMDEF_LIBRARY_NAME_SUFFIX_STATIC_MACOSX:STRING=.a
+## CMDEF_LIBRARY_NAME_SUFFIX_STATIC_MACOS:STRING=.a
 
 ## CMDEF_LIBRARY_NAME_SUFFIX_STATIC_WINDOWS:STRING=.lib
 
@@ -146,7 +146,7 @@ Windows shared library extension.
 
 ## CMDEF_OS_LINUX:BOOL=ON
 
-## CMDEF_OS_MACOSX:BOOL=OFF
+## CMDEF_OS_MACOS:BOOL=OFF
 
 ## CMDEF_OS_NAME:STRING=linux
 

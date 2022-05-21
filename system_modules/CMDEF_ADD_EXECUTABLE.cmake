@@ -21,8 +21,8 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 # WIN32 - create WIN32 application.
 # Ignored if the CMDEF_OS_WINDOWS is false
 #
-# MACOSX_BUNDLE - create macosx bundle.
-# Ignored if CMDEF_OS_MACOSX is false.
+# MACOS_BUNDLE - create macosx bundle.
+# Ignored if CMDEF_OS_MACOS is false.
 #
 # OUTPUT_NAME - output base name. Name of the target
 # file after compile and link.
@@ -33,7 +33,7 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #		VERSION <version>
 #		[OUTPUT_NAME <output_name>]
 #		[WIN32         {ON|OFF}]
-#		[MACOSX_BUNDLE {ON|OFF}]
+#		[MACOS_BUNDLE {ON|OFF}]
 #		[INCLUDE_DIRECTORIES <include_directories> M]
 # )
 #
@@ -47,7 +47,7 @@ FUNCTION(CMDEF_ADD_EXECUTABLE)
 			TARGET
 			OUTPUT_NAME
 		OPTIONS
-			WIN32 MACOSX_BUNDLE
+			WIN32 MACOS_BUNDLE
 		REQUIRED
 			VERSION
 			SOURCES
@@ -60,8 +60,8 @@ FUNCTION(CMDEF_ADD_EXECUTABLE)
 	SET(exec_flag)
 	IF(CMDEF_OS_WINDOWS AND __WIN32)
 		SET(exec_flag WIN32)
-	ELSEIF(CMDEF_OS_MACOSX AND __MACOSX_BUNDLE)
-		SET(exec_flag MACOSX_BUNDLE)
+	ELSEIF(CMDEF_OS_MACOS AND __MACOS_BUNDLE)
+		SET(exec_flag MACOS_BUNDLE)
 	ENDIF()
 
 	SET(output_name ${__TARGET})
