@@ -237,7 +237,12 @@ MACRO(_CMDEF_ENV_SET_OS)
 	)
 
 	IF(NOT CMDEF_ARCHITECTURE)
-		_CMDEF_ENV_GET_ARCH(arch)
+		SET(arch)
+		IF($ENV{CMDEF_ARCHITECTURE})
+			SET(arch "$ENV{CMDEF_ARCHITECTURE}")
+		ELSE()
+			_CMDEF_ENV_GET_ARCH(arch)
+		ENDIF()
 		SET(CMDEF_ARCHITECTURE ${arch}
 			CACHE STRING
 			"Achitecture for which we will compile"
