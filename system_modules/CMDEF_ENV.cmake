@@ -303,7 +303,9 @@ ENDMACRO()
 
 ## Helper
 # Set install dir names which serve as DESTINATION
-# for 'install' command
+# for 'install' command.
+#
+# All install dirs must be one level. Two level dirs are note supported!
 #
 # <function>(
 #		<prefix>
