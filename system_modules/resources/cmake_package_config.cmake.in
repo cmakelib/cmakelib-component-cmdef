@@ -40,5 +40,5 @@ FOREACH(file IN LISTS files)
 	INCLUDE(${file})
 ENDFOREACH()
 
-SET_AND_CHECK(config_version_file "${CMAKE_CURRENT_LIST_DIR}/${PACKAGE_FIND_NAME}ConfigVersion.cmake")
+SET_AND_CHECK(config_version_file "${CMAKE_CURRENT_LIST_DIR}/${CMAKE_FIND_PACKAGE_NAME}ConfigVersion.cmake")
 INCLUDE("${config_version_file}")
