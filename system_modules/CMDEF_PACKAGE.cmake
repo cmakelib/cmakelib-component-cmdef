@@ -65,7 +65,8 @@ FUNCTION(CMDEF_PACKAGE)
 		MULTI_VALUE
 			CONFIGURATIONS
 		ONE_VALUE
-			VERSION MAIN_TARGET
+			VERSION
+			MAIN_TARGET
 			CPACK_CONFIG_FILE
 		REQUIRED
 			VERSION
@@ -91,8 +92,10 @@ FUNCTION(CMDEF_PACKAGE)
 		SET(config_file "${CMAKE_CURRENT_BINARY_DIR}/CMDEFCPackConfig.cmake")
 	ENDIF()
 
-	SET(package_config_file "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
-	SET(package_version_file "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
+#	SET(package_config_file "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
+#	SET(package_version_file "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
+	SET(package_config_file "${CMAKE_CURRENT_BINARY_DIR}/${__MAIN_TARGET}Config.cmake")
+	SET(package_version_file "${CMAKE_CURRENT_BINARY_DIR}/${__MAIN_TARGET}ConfigVersion.cmake")
 
 	INCLUDE(CMakePackageConfigHelpers)
 	CONFIGURE_PACKAGE_CONFIG_FILE(

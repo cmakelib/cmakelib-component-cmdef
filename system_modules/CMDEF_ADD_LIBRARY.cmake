@@ -41,7 +41,7 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #
 # <function>(
 #		LIBRARY_GROUP <library_group>
-#		TYPE {SHARED|STATIC}
+#		TYPE {SHARED|STATIC|INTERFACE}
 #		SOURCES <source_files> M
 #		VERSION <version>
 #		[INCLUDE_DIRECTORIES <directories> m]
@@ -64,6 +64,10 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 			LIBRARY_GROUP
 		P_ARGN ${ARGN}
 	)
+	# TODO check and forbid "_" in LIBRARY_GROUP name
+	# TODO set SEPARATOR
+	# TODO oddelat object lib
+	# TODO dat TYPE na silu lowercase za jmeno
 
 	CMUTIL_VERSION_CHECK(${__VERSION})
 	_CMDEF_ADD_LIBRARY_CHECK_TYPE(${__TYPE})
@@ -71,6 +75,7 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 	IF(TARGET ${__LIBRARY_GROUP})
 		MESSAGE(FATAL_ERROR "Target '${__LIBRARY_GROUP}' already exist!")
 	ENDIF()
+#[[
 
 	SET(target_object_lib ${__LIBRARY_GROUP}-object)
 	IF(NOT TARGET ${target_object_lib})
@@ -86,22 +91,28 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 				FOLDER "${CMDEF_MULTICONF_FOLDER_NAME}/object_libraries"
 		)
 	ENDIF()
+]]
 
 	IF("${__TYPE}" STREQUAL "SHARED")
-		SET(target_lib_suffix shared)
-		SET_PROPERTY(TARGET ${target_object_lib} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-	ELSEIF("${__TYPE}" STREQUAL "STATIC")
-		SET(target_lib_suffix static)
-	ELSE()
-		MESSAGE(FATAL_ERROR "Invalid library type '${__TYPE}'")
+		SET_PROPERTY(TARGET ${__LIBRARY_GROUP} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 	ENDIF()
-	SET(target_lib "${__LIBRARY_GROUP}-${target_lib_suffix}")
+	STRING(TOLOWER "${__TYPE}" target_lib_type_suffix)
+	SET(target_lib "${__LIBRARY_GROUP}-${target_lib_type_suffix}")
+	MESSAGE("target lib ${target_lib}")
 
-	ADD_LIBRARY(${target_lib} "${__TYPE}" $<TARGET_OBJECTS:${target_object_lib}>)
+	ADD_LIBRARY(${target_lib} "${__TYPE}")
+	IF (DEFINED __SOURCES)
+		TARGET_SOURCES(${target_lib} PUBLIC __SOURCES)
+	ENDIF ()
+
 	IF(DEFINED __INCLUDE_DIRECTORIES)
-		TARGET_INCLUDE_DIRECTORIES(${target_object_lib} PUBLIC $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
-		TARGET_INCLUDE_DIRECTORIES(${target_lib}        PUBLIC $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
-	ENDIF()
+		IF("${__TYPE}" STREQUAL "INTERFACE")
+			TARGET_INCLUDE_DIRECTORIES(${target_lib} INTERFACE $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
+		ELSE ()
+			TARGET_INCLUDE_DIRECTORIES(${target_lib} PUBLIC $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
+		ENDIF ()
+	ENDIF ()
+
 	IF(DEFINED __INSTALL_INCLUDE_DIRECTORIES)
 		TARGET_INCLUDE_DIRECTORIES(${target_lib} INTERFACE $<INSTALL_INTERFACE:${__INSTALL_INCLUDE_DIRECTORIES}>)
 		SET_PROPERTY(TARGET ${target_lib}
@@ -110,23 +121,26 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 		)
 	ENDIF()
 
-	SET(libname_suffix)
+#[[	SET(libname_suffix)
 	IF(DEFINED CMDEF_LIBRARY_NAME_FLAG_${__TYPE})
 		SET(libname_suffix "${CMDEF_LIBRARY_NAME_FLAG_${__TYPE}}")
-	ENDIF()
+	ENDIF()]]
 
 	SET(output_name)
 	IF(DEFINED CMAKE_BUILD_TYPE)
 		IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-			SET(output_name "${CMDEF_LIBRARY_PREFIX}${__LIBRARY_GROUP}${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}${libname_suffix}")
+			SET(output_name "${CMDEF_LIBRARY_PREFIX}${target_lib}${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}")
 		ELSE()
-			SET(output_name "${CMDEF_LIBRARY_PREFIX}${__LIBRARY_GROUP}${libname_suffix}")
+			SET(output_name "${CMDEF_LIBRARY_PREFIX}${target_lib}")
 		ENDIF()
 	ELSE()
-		SET(output_name "${CMDEF_LIBRARY_PREFIX}${__LIBRARY_GROUP}$<$<CONFIG:DEBUG>:${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}>${libname_suffix}")
+		SET(output_name "${CMDEF_LIBRARY_PREFIX}${target_lib}$<$<CONFIG:DEBUG>:${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}>")
 	ENDIF()
 
-	_CMDEF_ADD_LIBRARY_GET_SUFFIX(suffix ${__TYPE})
+	SET(suffix)
+	IF (NOT "${__TYPE}" STREQUAL "INTERFACE")
+		_CMDEF_ADD_LIBRARY_GET_SUFFIX(suffix ${__TYPE})
+	ENDIF ()
 	SET_TARGET_PROPERTIES(${target_lib}
 		PROPERTIES
 			SUFFIX "${suffix}"
@@ -215,7 +229,7 @@ ENDFUNCTION()
 
 
 ## Helper
-# Get library suffix according to build type
+# Get library suffix according to build type and host OS
 #
 # <function>(
 #		<type> // build type - uppercase
@@ -233,14 +247,14 @@ ENDFUNCTION()
 
 ## Helper
 #
-# Check if the 'type' is STATIC or SHARED
+# Check if the 'type' is STATIC, SHARED or INTERFACE
 #
 # <function>(
 #		<library_type>
 # )
 #
 FUNCTION(_CMDEF_ADD_LIBRARY_CHECK_TYPE type)
-	SET(available_types "STATIC" "SHARED")
+	SET(available_types "STATIC" "SHARED" "INTERFACE")
 	LIST(FIND available_types "${type}" type_found)
 	IF(type_found EQUAL -1)
 		MESSAGE(FATAL_ERROR "Invalid Type '${type}'")

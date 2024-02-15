@@ -37,7 +37,7 @@ FUNCTION(CMDEF_INSTALL)
 		ONE_VALUE
 			TARGET
 		OPTIONS
-			NO_INSTALL_CONFIG
+			NO_INSTALL_CONFIG # TODO check and if useless delete
 		REQUIRED
 			TARGET
 		P_ARGN ${ARGN}
@@ -48,10 +48,12 @@ FUNCTION(CMDEF_INSTALL)
 	ENDIF()
 
 	SET(original_target ${__TARGET})
-	
+	MESSAGE("OG target 1 ${original_target}")
 	CMDEF_ADD_LIBRARY_CHECK(${__TARGET} cmdef_target)
 	IF(cmdef_target)
 		SET(original_target ${cmdef_target})
+		MESSAGE("OG target 2 ${original_target}")
+
 		GET_PROPERTY(include_dirs TARGET ${original_target} PROPERTY CMDEF_INSTALL_INCLUDE_DIRECTORIES)
 		IF(NOT include_dirs STREQUAL "NOTFOUND")
 			TARGET_INCLUDE_DIRECTORIES(${original_target} INTERFACE $<INSTALL_INTERFACE:${CMDEF_INCLUDE_INSTALL_DIR}>)
@@ -84,9 +86,11 @@ FUNCTION(CMDEF_INSTALL)
 	IF(DEFINED __NO_INSTALL_CONFIG AND NOT __NO_INSTALL_CONFIG)
 		INSTALL(EXPORT ${original_target}
 			CONFIGURATIONS ${__CONFIGURATIONS}
-			DESTINATION "cmake/"
+			DESTINATION "cmakem/"
 		)
 	ENDIF()
+	MESSAGE("OG target 3 ${original_target}")
+
 ENDFUNCTION()
 
 
