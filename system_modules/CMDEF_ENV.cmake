@@ -152,12 +152,52 @@ ENDMACRO()
 # <function> (
 # )
 #
-MACRO(_CMDEF_ENV_SET_SUPPORTED_LANG)
+FUNCTION(_CMDEF_ENV_SET_SUPPORTED_LANG)
 	SET(CMDEF_SUPPORTED_LANG_LIST C;CXX;OBJC;OBJCXX;RC;
 		CACHE STRING
 		"Supported programming languages"
 	)
-ENDMACRO()
+	SET(CMDEF_LANG_CXX_SOURCE_FILE_EXTENSIONS .cpp .cc .cxx .hpp
+		CACHE STRING
+		"List of C++ source file extensions"
+	)
+	SET(CMDEF_LANG_C_SOURCE_FILE_EXTENSIONS .c .h
+		CACHE STRING
+		"List of C source file extensions"
+	)
+	SET(CMDEF_LANG_OBJC_SOURCE_FILE_EXTENSIONS .m .h
+		CACHE STRING
+		"List of OBJC source file extensions"
+	)
+	SET(CMDEF_LANG_OBJCXX_SOURCE_FILE_EXTENSIONS .mm
+		CACHE STRING
+		"List of OBJCXX source file extensions"
+	)
+	SET(CMDEF_LANG_RC_SOURCE_FILE_EXTENSIONS .rc
+		CACHE STRING
+		"List of RC source file extensions"
+	)
+	SET(all_extensions)
+	FOREACH(lang_suffix IN LISTS CMDEF_SUPPORTED_LANG_LIST)
+		STRING(TOUPPER ${lang_suffix} lang_suffix_upper)
+		SET(var_name CMDEF_LANG_${lang_suffix_upper}_SOURCE_FILE_EXTENSIONS)
+		IF(NOT DEFINED ${var_name})
+			MESSAGE(FATAL_ERROR "Language ${lang_suffix_upper} has no source file extension defined!")
+		ENDIF()
+		LIST(APPEND all_extensions "${${var_name}}")
+	ENDFOREACH()
+	FOREACH(lang_suffix IN LISTS all_extensions)
+		STRING(REGEX MATCH "^\\..*" lang_suffix_match_format "${lang_suffix}")
+		IF(NOT lang_suffix_match_format)
+			MESSAGE(FATAL_ERROR "Language source file extension ${lang_suffix} has wrong format! Missing '.'.")
+		ENDIF()
+	ENDFOREACH()
+	LIST(REMOVE_DUPLICATES all_extensions)
+	SET(CMDEF_SUPPORTED_LANG_SOURCE_EXT_LIST ${all_extensions}
+		CACHE STRING
+		"All extensions for supported languages"
+	)
+ENDFUNCTION()
 
 
 
@@ -315,6 +355,10 @@ MACRO(_CMDEF_ENV_SET_TARGET_INSTALL_DIR)
 	SET(CMDEF_INCLUDE_INSTALL_DIR "include/"
 		CACHE PATH
 		"Name of include directory after install (in package)"
+	)
+	SET(CMDEF_SOURCE_INSTALL_DIR "source/"
+		CACHE PATH
+		"Name of source directory after install (in package)"
 	)
 	SET(CMDEF_LIBRARY_INSTALL_DIR "lib/"
 		CACHE PATH

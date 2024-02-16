@@ -44,6 +44,8 @@ FUNCTION(CMDEF_INSTALL)
 		P_ARGN ${ARGN}
 	)
 
+	# TODO - gather all CMDEF linraries
+
 	IF(NOT DEFINED __CONFIGURATIONS)
 		SET(__CONFIGURATIONS ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	ENDIF()
@@ -55,7 +57,7 @@ FUNCTION(CMDEF_INSTALL)
 
 		GET_PROPERTY(include_dirs TARGET ${original_target} PROPERTY CMDEF_INSTALL_INCLUDE_DIRECTORIES)
 		IF(NOT include_dirs STREQUAL "NOTFOUND")
-			TARGET_INCLUDE_DIRECTORIES(${original_target} INTERFACE $<INSTALL_INTERFACE:${CMDEF_INCLUDE_INSTALL_DIR}>)
+			#TARGET_INCLUDE_DIRECTORIES(${original_target} INTERFACE $<INSTALL_INTERFACE:${CMDEF_INCLUDE_INSTALL_DIR}>)
 			FOREACH(dir IN LISTS include_dirs)
 				INSTALL(DIRECTORY ${dir}
 					CONFIGURATIONS ${__CONFIGURATIONS}
@@ -82,14 +84,74 @@ FUNCTION(CMDEF_INSTALL)
 		PUBLIC_HEADER DESTINATION "${CMDEF_INCLUDE_INSTALL_DIR}"
 		${file_set}
 	)
+	_CMDEF_INSTALL_INTERFACE_TARGET(TARGET ${original_target} CONFIGURATIONS ${__CONFIGURATIONS})
+
 	IF(DEFINED __NO_INSTALL_CONFIG AND NOT __NO_INSTALL_CONFIG)
 		INSTALL(EXPORT ${original_target}
 			CONFIGURATIONS ${__CONFIGURATIONS}
-			DESTINATION "cmake/"
+			DESTINATION "cmake/" #TODO add package name to path
 			# TODO Add NAMESPACE
 		)
 	ENDIF()
 
+ENDFUNCTION()
+
+
+
+##
+#
+# <function> (
+#	<interface_target>
+# )
+#
+FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
+	CMLIB_PARSE_ARGUMENTS(
+		MULTI_VALUE
+			CONFIGURATIONS
+		ONE_VALUE
+			TARGET
+		REQUIRED
+			TARGET CONFIGURATIONS
+		P_ARGN ${ARGN}
+	)
+	SET(interface_target ${__TARGET})
+
+	GET_TARGET_PROPERTY(target_type ${interface_target} TYPE)
+	GET_TARGET_PROPERTY(cmdef_lib ${interface_target} CMDEF_LIBRARY)
+	IF(cmdef_lib STREQUAL "cmdef_lib-NOTFOUND" OR (NOT target_type STREQUAL "INTERFACE_LIBRARY"))
+		RETURN()
+	ENDIF()
+
+	GET_TARGET_PROPERTY(interface_sources ${interface_target} CMDEF_LIBRARY_SOURCES)
+	GET_TARGET_PROPERTY(source_base_dir   ${interface_target} CMDEF_LIBRARY_BASE_DIR)
+
+	SET(sources)
+	SET(sources_without_base_dir)
+	IF(source_base_dir)
+		FOREACH(source IN LISTS interface_sources)
+			CMAKE_PATH(IS_PREFIX source_base_dir "${source}" NORMALIZE has_base_dir)
+			IF(has_base_dir)
+				LIST(APPEND sources "${source}")
+			ELSE()
+				LIST(APPEND sources_without_base_dir "${source}")
+			ENDIF()
+		ENDFOREACH()
+	ELSE()
+		SET(sources_without_base_dir ${interface_sources})
+	ENDIF()
+
+	INSTALL(FILES ${sources_without_base_dir}
+		CONFIGURATIONS ${__CONFIGURATIONS}
+		DESTINATION "${CMDEF_SOURCE_INSTALL_DIR}"
+	)
+	FOREACH(source IN LISTS sources)
+		CMAKE_PATH(RELATIVE_PATH source BASE_DIRECTORY "${source_base_dir}" OUTPUT_VARIABLE relative_source_path)
+		CMAKE_PATH(GET relative_source_path PARENT_PATH relative_source_dir)
+		INSTALL(FILES ${source}
+			CONFIGURATIONS ${__CONFIGURATIONS}
+			DESTINATION "${CMDEF_SOURCE_INSTALL_DIR}/${relative_source_dir}"
+		)
+	ENDFOREACH()
 ENDFUNCTION()
 
 
