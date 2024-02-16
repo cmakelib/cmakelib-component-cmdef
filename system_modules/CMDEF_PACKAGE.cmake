@@ -73,12 +73,16 @@ FUNCTION(CMDEF_PACKAGE)
 			MAIN_TARGET
 		P_ARGN ${ARGN}
 	)
-
+# TODO find dependencies in properties, everything the main target linked
+	# Funkce nejprve najde vsechny NOT imported TARGETy 1. urovne -> pouze ty primo linknuty,
+	# potom bude rekurzivne prochazet vsechny dependence ktere jsou TARGET a pokud najde nejaky cmake, ktery jeste nebyl definovany tak zarve WARNING
 	SET(original_target "${__MAIN_TARGET}")
 	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_target)
 	IF(cmdef_target)
-		SET(original_target ${cmdef_target})
+		SET(original_target ${cmdef_target})	# TODO proc se nastavuje original target ktery se nepouziva
 	ENDIF()
+
+	_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	IF(DEFINED __CONFIGURATIONS)
@@ -142,4 +146,77 @@ FUNCTION(CMDEF_PACKAGE)
 		)
 		ADD_DEPENDENCIES(PACKAGE ${__MAIN_TARGET})
 	ENDIF()
+ENDFUNCTION()
+
+FUNCTION(_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES main_target output_dependencies)
+	SET(dependencies)
+
+	GET_TARGET_PROPERTY(linked_interfaces ${main_target} INTERFACE_LINK_LIBRARIES)
+	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_interfaces}" target_interfaces)
+	MESSAGE("Linked interfaces ${linked_interfaces}")
+	SET(dependencies ${dependencies} ${target_interfaces})
+
+	# TODO redundant? INTERFACE_LINK_LIBRARIES seems to find everything, but from documentation I didnt understand the function to do so
+	#[[GET_TARGET_PROPERTY(linked_libs ${main_target} LINK_LIBRARIES)
+	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
+	SET(dependencies ${dependencies} ${target_libs})
+
+	LIST(REMOVE_DUPLICATES dependencies)
+	MESSAGE("${dependencies}")]]
+
+	FOREACH (output_dependency IN LISTS dependencies)
+		MESSAGE("Checking ${output_dependency}") # TODO debug print
+		_CMDEF_PACKAGE_CHECK_DEPENDENCIES("${output_dependency}" "${dependencies}")
+	ENDFOREACH ()
+
+	SET(output_dependencies ${dependencies} PARENT_SCOPE)
+ENDFUNCTION()
+
+FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
+	SET(targets)
+
+	IF (input_libraries)
+		FOREACH (input_library IN LISTS input_libraries)
+			IF (TARGET ${input_library})
+				IF (NOT "${${input_library}_IMPORTED}")
+					SET(targets ${targets} ${input_library})
+					MESSAGE("appended ${input_library}")
+				ELSE ()
+					MESSAGE("Library ${input_library} is IMPORTED")
+				ENDIF ()
+			ELSE ()
+				MESSAGE("Library ${input_library} is not a target")
+			ENDIF ()
+		ENDFOREACH ()
+	ELSE ()
+		MESSAGE("empty input libraries") # TODO debug print
+	ENDIF ()
+
+	SET(${output_targets} ${targets} PARENT_SCOPE)
+ENDFUNCTION()
+
+FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
+	GET_TARGET_PROPERTY(linked_interfaces ${input_library} INTERFACE_LINK_LIBRARIES)
+
+	IF (linked_interfaces)
+		FOREACH (linked_lib IN LISTS linked_interfaces)
+			MESSAGE("Checking library ${linked_lib}, dependency of ${input_library}") # TODO debug print
+			IF (TARGET ${linked_lib})
+				GET_TARGET_PROPERTY(imported ${linked_lib} IMPORTED)
+				MESSAGE("is imported: ${imported}")
+				IF (NOT ${imported})
+					IF (NOT "${linked_lib}" IN_LIST already_included_libs)
+						# TODO rewrite for more clarity
+						MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${input_library}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
+					ENDIF ()
+				ENDIF ()
+			ENDIF ()
+		ENDFOREACH ()
+	ENDIF ()
+
+	MESSAGE("dependency Linked interfaces ${linked_interfaces}")
+	#FOREACH (linked_lib IN LISTS )
+	#GET_TARGET_PROPERTY(linked_libs ${input_library} LINK_LIBRARIES)
+	# _CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
+	# SET(output_dependencies ${target_libs} PARENT_SCOPE)
 ENDFUNCTION()
