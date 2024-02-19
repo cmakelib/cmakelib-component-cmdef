@@ -53,7 +53,7 @@ CMDEF_ADD_LIBRARY(
 	LIBRARY_GROUP interfacelib_third
 	TYPE INTERFACE
 	SOURCES 					sources/third/InterfaceThird.cpp
-	SOURCE_BASE_DIRECTORY       sources/
+	SOURCE_BASE_DIRECTORY       sources/ # Needed only for library installation
 	INSTALL_INCLUDE_DIRECTORIES "include_third/"
 	INCLUDE_DIRECTORIES         "${CMAKE_CURRENT_LIST_DIR}/include_third/"
 	VERSION 1.2.1
