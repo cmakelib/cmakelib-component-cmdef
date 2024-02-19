@@ -159,10 +159,10 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES main_target output_depend
 	# TODO redundant? INTERFACE_LINK_LIBRARIES seems to find everything, but from documentation I didnt understand the function to do so
 	#[[GET_TARGET_PROPERTY(linked_libs ${main_target} LINK_LIBRARIES)
 	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
-	SET(dependencies ${dependencies} ${target_libs})
+	SET(dependencies ${dependencies} ${target_libs}) ]]
 
 	LIST(REMOVE_DUPLICATES dependencies)
-	MESSAGE("${dependencies}")]]
+	# TODO add to targets
 
 	FOREACH (output_dependency IN LISTS dependencies)
 		MESSAGE("Checking ${output_dependency}") # TODO debug print
@@ -203,7 +203,7 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 			MESSAGE("Checking library ${linked_lib}, dependency of ${input_library}") # TODO debug print
 			IF (TARGET ${linked_lib})
 				GET_TARGET_PROPERTY(imported ${linked_lib} IMPORTED)
-				MESSAGE("is imported: ${imported}")
+				MESSAGE("is imported: ${imported}") # TODO debug print
 				IF (NOT ${imported})
 					IF (NOT "${linked_lib}" IN_LIST already_included_libs)
 						# TODO rewrite for more clarity
@@ -219,4 +219,13 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 	#GET_TARGET_PROPERTY(linked_libs ${input_library} LINK_LIBRARIES)
 	# _CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
 	# SET(output_dependencies ${target_libs} PARENT_SCOPE)
+ENDFUNCTION()
+
+FUNCTION(_CMDEF_PACKAGE_TRANSLATE_DEPENDENCY_TO_TARGET_NAME dependencies output_target_names)
+	SET(target_names)
+	FOREACH (dependency IN LISTS dependencies)
+		SET(target "${dependency}.cmake")
+		LIST(APPEND target_names ${target})
+	ENDFOREACH ()
+	SET(output_target_names target_names PARENT_SCOPE)
 ENDFUNCTION()
