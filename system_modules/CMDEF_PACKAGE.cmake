@@ -76,13 +76,16 @@ FUNCTION(CMDEF_PACKAGE)
 # TODO find dependencies in properties, everything the main target linked
 	# Funkce nejprve najde vsechny NOT imported TARGETy 1. urovne -> pouze ty primo linknuty,
 	# potom bude rekurzivne prochazet vsechny dependence ktere jsou TARGET a pokud najde nejaky cmake, ktery jeste nebyl definovany tak zarve WARNING
-	SET(original_target "${__MAIN_TARGET}")
-	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_target)
-	IF(cmdef_target)
-		SET(original_target ${cmdef_target})	# TODO why setting original_target, that is not used later
+
+	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_library)
+	CMDEF_ADD_EXECUTABLE_CHECK(${__MAIN_TARGET} cmdef_executable)
+	IF(NOT cmdef_library AND NOT cmdef_executable)
+		MESSAGE(FATAL_ERROR "Target ${__MAIN_TARGET} is not a CMLib target")
 	ENDIF()
 
 	_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
+	LIST(APPEND targets_to_include ${__MAIN_TARGET})
+	_CMDEF_PACKAGE_TRANSLATE_DEPENDENCY_TO_TARGET_NAME("${targets_to_include}" target_names)
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	IF(DEFINED __CONFIGURATIONS)
@@ -106,6 +109,7 @@ FUNCTION(CMDEF_PACKAGE)
 		"${_CMDEF_PACKAGE_CURRENT_DIR}/resources/cmake_package_config.cmake.in"
 		"${package_config_file}"
 		INSTALL_DESTINATION "cmake/"
+		PATH_VARS target_names
 	)
 	WRITE_BASIC_PACKAGE_VERSION_FILE(
 		"${package_version_file}"
@@ -151,24 +155,26 @@ ENDFUNCTION()
 FUNCTION(_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES main_target output_dependencies)
 	SET(dependencies)
 
-	GET_TARGET_PROPERTY(linked_interfaces ${main_target} INTERFACE_LINK_LIBRARIES)
-	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_interfaces}" target_interfaces)
-	MESSAGE("Linked interfaces ${linked_interfaces}")
-	SET(dependencies ${dependencies} ${target_interfaces})
-
+	GET_TARGET_PROPERTY(linked_libraries ${main_target} INTERFACE_LINK_LIBRARIES)
+	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libraries}" dependencies)
 	# TODO redundant? INTERFACE_LINK_LIBRARIES seems to find everything, but from documentation I didnt understand the function to do so
 	#[[GET_TARGET_PROPERTY(linked_libs ${main_target} LINK_LIBRARIES)
 	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
 	SET(dependencies ${dependencies} ${target_libs}) ]]
 
-	LIST(REMOVE_DUPLICATES dependencies)
-	# TODO add to targets
-
 	FOREACH (output_dependency IN LISTS dependencies)
 		_CMDEF_PACKAGE_CHECK_DEPENDENCIES("${output_dependency}" "${dependencies}")
 	ENDFOREACH ()
 
-	SET(output_dependencies ${dependencies} PARENT_SCOPE)
+	SET(dependencies_to_include)
+	FOREACH (target IN LISTS dependencies)
+		CMDEF_ADD_LIBRARY_CHECK(${target} is_cmdef_target)
+		IF(is_cmdef_target)
+			LIST(APPEND dependencies_to_include ${target})
+		ENDIF()
+	ENDFOREACH ()
+
+	SET(${output_dependencies} "${dependencies_to_include}" PARENT_SCOPE)
 ENDFUNCTION()
 
 FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
@@ -212,8 +218,8 @@ ENDFUNCTION()
 FUNCTION(_CMDEF_PACKAGE_TRANSLATE_DEPENDENCY_TO_TARGET_NAME dependencies output_target_names)
 	SET(target_names)
 	FOREACH (dependency IN LISTS dependencies)
-		SET(target "${dependency}.cmake")
+		SET(target "${dependency}.cmake") # TODO add project name
 		LIST(APPEND target_names ${target})
 	ENDFOREACH ()
-	SET(output_target_names target_names PARENT_SCOPE)
+	SET(${output_target_names} ${target_names} PARENT_SCOPE)
 ENDFUNCTION()
