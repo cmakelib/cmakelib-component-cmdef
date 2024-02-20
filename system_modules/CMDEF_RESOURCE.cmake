@@ -79,7 +79,7 @@ FUNCTION(CMDEF_RESOURCE_WINDOWS)
 	ENDIF()
 
 	GET_SOURCE_FILE_PROPERTY(file_definitions "${target_resource_dir}/${target_resource_filename}" COMPILE_DEFINITIONS)
-	IF(file_definitions STREQUAL "NOTFOUND")
+	IF(NOT file_definitions)
 		SET(file_definitions)
 	ENDIF()
 

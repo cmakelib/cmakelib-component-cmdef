@@ -44,7 +44,7 @@ FUNCTION(CMDEF_INSTALL)
 		P_ARGN ${ARGN}
 	)
 
-	# TODO - gather all CMDEF linraries
+	# TODO - gather all CMDEF libraries
 
 	IF(NOT DEFINED __CONFIGURATIONS)
 		SET(__CONFIGURATIONS ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
@@ -56,7 +56,7 @@ FUNCTION(CMDEF_INSTALL)
 		SET(original_target ${cmdef_target})
 
 		GET_PROPERTY(include_dirs TARGET ${original_target} PROPERTY CMDEF_INSTALL_INCLUDE_DIRECTORIES)
-		IF(NOT include_dirs STREQUAL "NOTFOUND")
+		IF(include_dirs)
 			TARGET_INCLUDE_DIRECTORIES(${original_target} INTERFACE $<INSTALL_INTERFACE:${CMDEF_INCLUDE_INSTALL_DIR}>)
 			FOREACH(dir IN LISTS include_dirs)
 				INSTALL(DIRECTORY ${dir}
@@ -84,8 +84,10 @@ FUNCTION(CMDEF_INSTALL)
 		PUBLIC_HEADER DESTINATION "${CMDEF_INCLUDE_INSTALL_DIR}"
 		${file_set}
 	)
-	# TODO if INTERFACE target
-	_CMDEF_INSTALL_INTERFACE_TARGET(TARGET ${original_target} CONFIGURATIONS ${__CONFIGURATIONS})
+	GET_TARGET_PROPERTY(target_type ${original_target} TYPE)
+	IF(${target_type} STREQUAL "INTERFACE_LIBRARY")
+		_CMDEF_INSTALL_INTERFACE_TARGET(TARGET ${original_target} CONFIGURATIONS ${__CONFIGURATIONS})
+	ENDIF ()
 
 	IF(DEFINED __NO_INSTALL_CONFIG AND NOT __NO_INSTALL_CONFIG)
 		INSTALL(EXPORT ${original_target}
@@ -98,12 +100,12 @@ FUNCTION(CMDEF_INSTALL)
 ENDFUNCTION()
 
 
-
 ##
+# It installs sources of the given target.
 #
-# <function> (
-#	<interface_target>
-# )
+# If the TARGET has BASE_DIR property set, then the source files are installed
+# in relative path to the BASE_DIR.
+# Otherwise all source files are installed in the root of the CMDEF_SOURCE_INSTALL_DIR
 #
 FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 	CMLIB_PARSE_ARGUMENTS(
@@ -117,14 +119,16 @@ FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 	)
 	SET(interface_target ${__TARGET})
 
-	GET_TARGET_PROPERTY(target_type ${interface_target} TYPE)
 	GET_TARGET_PROPERTY(cmdef_lib ${interface_target} CMDEF_LIBRARY)
-	IF(cmdef_lib STREQUAL "cmdef_lib-NOTFOUND" OR (NOT target_type STREQUAL "INTERFACE_LIBRARY"))
+	GET_TARGET_PROPERTY(target_type ${interface_target} TYPE)
+	IF(NOT cmdef_lib OR (NOT target_type STREQUAL "INTERFACE_LIBRARY"))
 		RETURN()
 	ENDIF()
-
 	GET_TARGET_PROPERTY(interface_sources ${interface_target} CMDEF_LIBRARY_SOURCES)
-	GET_TARGET_PROPERTY(source_base_dir   ${interface_target} CMDEF_LIBRARY_BASE_DIR) # TODO check if found
+	IF (NOT interface_sources)
+		RETURN()
+	ENDIF ()
+	GET_TARGET_PROPERTY(source_base_dir   ${interface_target} CMDEF_LIBRARY_BASE_DIR)
 
 	SET(sources)
 	SET(sources_without_base_dir)
@@ -145,7 +149,7 @@ FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 		CONFIGURATIONS ${__CONFIGURATIONS}
 		DESTINATION "${CMDEF_SOURCE_INSTALL_DIR}"
 	)
-	SET_TARGET_PROPERTIES(${__TARGET} PROPERTIES EXPORT_SOURCES "")
+	SET_TARGET_PROPERTIES(${__TARGET} PROPERTIES CMDEF_INSTALL_INTERFACE_SOURCES "")
 
 	FOREACH(source IN LISTS sources)
 		CMAKE_PATH(RELATIVE_PATH source BASE_DIRECTORY "${source_base_dir}" OUTPUT_VARIABLE relative_source_path)
@@ -155,13 +159,12 @@ FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 		INSTALL(FILES ${source}
 			CONFIGURATIONS ${__CONFIGURATIONS}
 			DESTINATION "${CMDEF_SOURCE_INSTALL_DIR}/${relative_source_dir}"
-		) # TODO Add to Export_properties ISNTALL_DIR/RELATIVE_DIR/filename
-		SET_PROPERTY(TARGET ${__TARGET} APPEND PROPERTY EXPORT_SOURCES "${CMDEF_SOURCE_INSTALL_DIR}/${relative_source_dir}/${filename}")
+		)
+		SET_PROPERTY(TARGET ${__TARGET} APPEND PROPERTY CMDEF_INSTALL_INTERFACE_SOURCES "${CMDEF_SOURCE_INSTALL_DIR}/${relative_source_dir}/${filename}")
 	ENDFOREACH()
-	SET_PROPERTY(TARGET ${__TARGET} APPEND PROPERTY EXPORT_PROPERTIES EXPORT_SOURCES)
+	SET_PROPERTY(TARGET ${__TARGET} APPEND PROPERTY EXPORT_PROPERTIES CMDEF_INSTALL_INTERFACE_SOURCES)
 
 ENDFUNCTION()
-
 
 
 ##
@@ -180,7 +183,7 @@ FUNCTION(CMDEF_INSTALL_USED_FOR)
 		P_ARGN ${ARGN}
 	)
 	GET_TARGET_PROPERTY(is_installed_by_cmdef ${__TARGET} CMDEF_INSTALL)
-	IF("${is_installed_by_cmdef}" STREQUAL "is_installed_by_cmdef-NOTFOUND")
+	IF(NOT is_installed_by_cmdef)
 		UNSET("${__OUTPUT_VAR}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()

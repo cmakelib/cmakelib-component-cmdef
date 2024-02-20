@@ -79,7 +79,7 @@ FUNCTION(CMDEF_PACKAGE)
 	SET(original_target "${__MAIN_TARGET}")
 	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_target)
 	IF(cmdef_target)
-		SET(original_target ${cmdef_target})	# TODO proc se nastavuje original target ktery se nepouziva
+		SET(original_target ${cmdef_target})	# TODO why setting original_target, that is not used later
 	ENDIF()
 
 	_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
@@ -165,7 +165,6 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES main_target output_depend
 	# TODO add to targets
 
 	FOREACH (output_dependency IN LISTS dependencies)
-		MESSAGE("Checking ${output_dependency}") # TODO debug print
 		_CMDEF_PACKAGE_CHECK_DEPENDENCIES("${output_dependency}" "${dependencies}")
 	ENDFOREACH ()
 
@@ -174,7 +173,6 @@ ENDFUNCTION()
 
 FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
 	SET(targets)
-
 	IF (input_libraries)
 		FOREACH (input_library IN LISTS input_libraries)
 			IF (TARGET ${input_library})
@@ -188,8 +186,6 @@ FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targe
 				MESSAGE("Library ${input_library} is not a target")
 			ENDIF ()
 		ENDFOREACH ()
-	ELSE ()
-		MESSAGE("empty input libraries") # TODO debug print
 	ENDIF ()
 
 	SET(${output_targets} ${targets} PARENT_SCOPE)
@@ -200,10 +196,8 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 
 	IF (linked_interfaces)
 		FOREACH (linked_lib IN LISTS linked_interfaces)
-			MESSAGE("Checking library ${linked_lib}, dependency of ${input_library}") # TODO debug print
 			IF (TARGET ${linked_lib})
 				GET_TARGET_PROPERTY(imported ${linked_lib} IMPORTED)
-				MESSAGE("is imported: ${imported}") # TODO debug print
 				IF (NOT ${imported})
 					IF (NOT "${linked_lib}" IN_LIST already_included_libs)
 						# TODO rewrite for more clarity
@@ -213,12 +207,6 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 			ENDIF ()
 		ENDFOREACH ()
 	ENDIF ()
-
-	MESSAGE("dependency Linked interfaces ${linked_interfaces}")
-	#FOREACH (linked_lib IN LISTS )
-	#GET_TARGET_PROPERTY(linked_libs ${input_library} LINK_LIBRARIES)
-	# _CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
-	# SET(output_dependencies ${target_libs} PARENT_SCOPE)
 ENDFUNCTION()
 
 FUNCTION(_CMDEF_PACKAGE_TRANSLATE_DEPENDENCY_TO_TARGET_NAME dependencies output_target_names)

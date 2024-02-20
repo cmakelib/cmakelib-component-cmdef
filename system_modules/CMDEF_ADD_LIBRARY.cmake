@@ -23,8 +23,8 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #
 # Initialize PREFIX and SUFFIX properties
 #
-# Creates targets <library_group>-object, <library_group>-{static,shared}.
-# (If the TYPE is SHARED then 'shared' otherwise 'static')
+# Creates target <library_group>-{static,shared,interface}.
+# (e.g. If the TYPE is SHARED then 'shared')
 #
 # INCLUDE_DIRECTORIES is directory which will be added as include directory for given targets.
 # generator expressions can be used.
@@ -46,7 +46,7 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #		VERSION <version>
 #		[INCLUDE_DIRECTORIES <directories> m]
 #		[INSTALL_INCLUDE_DIRECTORIES <install_include_dirs> M]
-#		[SOURCE_DIRECTORIES <source_directories> M]
+#		[SOURCE_BASE_DIRECTORY <source_directories> M]
 # )
 #
 FUNCTION(CMDEF_ADD_LIBRARY)
@@ -113,11 +113,6 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 				CMDEF_INSTALL_INCLUDE_DIRECTORIES ${__INSTALL_INCLUDE_DIRECTORIES}
 		)
 	ENDIF()
-
-#[[	SET(libname_suffix)
-	IF(DEFINED CMDEF_LIBRARY_NAME_FLAG_${__TYPE})
-		SET(libname_suffix "${CMDEF_LIBRARY_NAME_FLAG_${__TYPE}}")
-	ENDIF()]]
 
 	SET(output_name)
 	IF(DEFINED CMAKE_BUILD_TYPE)
@@ -238,7 +233,7 @@ ENDFUNCTION()
 #
 FUNCTION(CMDEF_ADD_LIBRARY_CHECK target output_var)
 	GET_PROPERTY(is_cmdef TARGET ${target} PROPERTY CMDEF_LIBRARY)
-	IF(NOT is_cmdef STREQUAL "NOTFOUND")
+	IF(is_cmdef)
 		SET(${output_var} "${target}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
