@@ -85,7 +85,6 @@ FUNCTION(CMDEF_PACKAGE)
 
 	_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
 	LIST(APPEND targets_to_include ${__MAIN_TARGET})
-	_CMDEF_PACKAGE_TRANSLATE_DEPENDENCY_TO_TARGET_NAME("${targets_to_include}" target_names)
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	IF(DEFINED __CONFIGURATIONS)
@@ -99,8 +98,6 @@ FUNCTION(CMDEF_PACKAGE)
 		SET(config_file "${CMAKE_CURRENT_BINARY_DIR}/CMDEFCPackConfig.cmake")
 	ENDIF()
 
-#	SET(package_config_file "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake")
-#	SET(package_version_file "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake")
 	SET(package_config_file "${CMAKE_CURRENT_BINARY_DIR}/${__MAIN_TARGET}Config.cmake")
 	SET(package_version_file "${CMAKE_CURRENT_BINARY_DIR}/${__MAIN_TARGET}ConfigVersion.cmake")
 
@@ -109,8 +106,8 @@ FUNCTION(CMDEF_PACKAGE)
 		"${_CMDEF_PACKAGE_CURRENT_DIR}/resources/cmake_package_config.cmake.in"
 		"${package_config_file}"
 		INSTALL_DESTINATION "cmake/"
-		PATH_VARS target_names
 	)
+
 	WRITE_BASIC_PACKAGE_VERSION_FILE(
 		"${package_version_file}"
 		VERSION "${__VERSION}"
@@ -213,13 +210,4 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 			ENDIF ()
 		ENDFOREACH ()
 	ENDIF ()
-ENDFUNCTION()
-
-FUNCTION(_CMDEF_PACKAGE_TRANSLATE_DEPENDENCY_TO_TARGET_NAME dependencies output_target_names)
-	SET(target_names)
-	FOREACH (dependency IN LISTS dependencies)
-		SET(target "${dependency}.cmake") # TODO add project name
-		LIST(APPEND target_names ${target})
-	ENDFOREACH ()
-	SET(${output_target_names} ${target_names} PARENT_SCOPE)
 ENDFUNCTION()

@@ -1,20 +1,20 @@
-
 @PACKAGE_INIT@
 FUNCTION(__INCLUDE_TARGETS_CONFIGS include_targets_names)
-    FOREACH(file IN LISTS include_targets_names)
-        CMAKE_PATH(GET file FILENAME filename)
-        INCLUDE("${CMAKE_CURRENT_LIST_DIR}/${filename}")
+    FOREACH(target IN LISTS include_targets_names)
+        SET(target_path "${CMAKE_CURRENT_LIST_DIR}/${target}.cmake")
+        INCLUDE("${target_path}")
 
-        STRING(REGEX REPLACE "\\.cmake$" "" target_name "${filename}")
-        GET_TARGET_PROPERTY(interface_sources ${target_name} CMDEF_INSTALL_INTERFACE_SOURCES)
+        GET_TARGET_PROPERTY(interface_sources ${target} CMDEF_INSTALL_INTERFACE_SOURCES)
         IF(interface_sources)
-            TARGET_SOURCES(${target_name} INTERFACE $<BUILD_INTERFACE:"${interface_sources}">)
+            FOREACH(source_file IN LISTS interface_sources)
+                SET(source_file_path "${PACKAGE_PREFIX_DIR}/${source_file}")
+                TARGET_SOURCES(${target} INTERFACE $<BUILD_INTERFACE:${source_file_path}>)
+            ENDFOREACH()
         ENDIF()
     ENDFOREACH()
 ENDFUNCTION()
 
-SET(include_targets_names "@PACKAGE_target_names@")
-__INCLUDE_TARGETS_CONFIGS("${include_targets_names}")
+__INCLUDE_TARGETS_CONFIGS("@targets_to_include@")
 
 SET_AND_CHECK(config_version_file "${CMAKE_CURRENT_LIST_DIR}/${CMAKE_FIND_PACKAGE_NAME}ConfigVersion.cmake")
 INCLUDE("${config_version_file}")
