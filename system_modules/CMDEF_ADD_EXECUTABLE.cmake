@@ -18,6 +18,8 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 ##
 # Add executable.
 #
+# SOURCES - all c/cpp/h/hpp files will be added as source to given target.
+#
 # WIN32 - create WIN32 application.
 # Ignored if the CMDEF_OS_WINDOWS is false
 #
@@ -26,7 +28,10 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #
 # OUTPUT_NAME - output base name. Name of the target
 # file after compile and link.
-# 
+#
+# [Custom properties]
+# CMDEF_EXECUTABLE - property which mark library as "created by CMDEF_ADD_EXECUTABLE"
+#
 # <function>(
 #		TARGET  <target>
 #		SOURCES <sources> M
@@ -94,7 +99,27 @@ FUNCTION(CMDEF_ADD_EXECUTABLE)
 	ENDIF()
 ENDFUNCTION()
 
-
+##
+# Check if the target is created by CMDEF_ADD_EXECUTABLE
+# function.
+#
+# Set <output_var> to TRUE if created by CMDEF_ADD_EXECUTABLE.
+#
+# Usage:
+#	<function>(target_a output_var)
+#	IF(NOT output_var)
+#		MESSAGE(STATUS "Not a CMDEF target")
+#	ENDIF()
+#
+# <function>(
+#	<target>
+#	<output_var>
+# )
+#
+FUNCTION(CMDEF_ADD_EXECUTABLE_CHECK target output_var)
+	GET_PROPERTY(is_cmdef_executable TARGET ${target} PROPERTY CMDEF_EXECUTABLE)
+	SET(${output_var} ${is_cmdef_executable} PARENT_SCOPE)
+ENDFUNCTION()
 
 ## Helper
 #
@@ -124,9 +149,4 @@ FUNCTION(_CMDEF_ADD_EXECUTABLE_WINDOWS_SETTING target_lib version)
 			PRODUCT_COMPANY_COPYRIGHT "${CMDEF_ENV_DESCRIPTION_COPYRIGHT}"
 			PRODUCT_COMPANY_NAME      "${CMDEF_ENV_DESCRIPTION_COMPANY_NAME}"
 	)
-ENDFUNCTION()
-
-FUNCTION(CMDEF_ADD_EXECUTABLE_CHECK target output_var)
-	GET_PROPERTY(is_cmdef_executable TARGET ${target} PROPERTY CMDEF_EXECUTABLE)
-	SET(${output_var} ${is_cmdef_executable} PARENT_SCOPE)
 ENDFUNCTION()

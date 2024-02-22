@@ -1,7 +1,7 @@
 ## Main
 #
 # Create CMake package.
-# Consumes output from CMDEF_ADD_LIBRARY, CMDEF_ADD_EXECUTABLE
+# Consumes output from CMDEF_ADD_LIBRARY or CMDEF_ADD_EXECUTABLE
 #
 # If the Generator supports multiconf default target PACKAGE
 # is redefined to support multiconfig generators.
@@ -73,9 +73,6 @@ FUNCTION(CMDEF_PACKAGE)
 			MAIN_TARGET
 		P_ARGN ${ARGN}
 	)
-# TODO find dependencies in properties, everything the main target linked
-	# Funkce nejprve najde vsechny NOT imported TARGETy 1. urovne -> pouze ty primo linknuty,
-	# potom bude rekurzivne prochazet vsechny dependence ktere jsou TARGET a pokud najde nejaky cmake, ktery jeste nebyl definovany tak zarve WARNING
 
 	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_library)
 	CMDEF_ADD_EXECUTABLE_CHECK(${__MAIN_TARGET} cmdef_executable)
@@ -83,7 +80,7 @@ FUNCTION(CMDEF_PACKAGE)
 		MESSAGE(FATAL_ERROR "Target ${__MAIN_TARGET} is not a CMLib target")
 	ENDIF()
 
-	_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
+	_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
 	LIST(APPEND targets_to_include ${__MAIN_TARGET})
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
@@ -149,7 +146,21 @@ FUNCTION(CMDEF_PACKAGE)
 	ENDIF()
 ENDFUNCTION()
 
-FUNCTION(_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES main_target output_dependencies)
+
+##
+# HELPER
+#
+# Find and check dependencies of the main target.
+# Adds all main_target's directly linked CMDEF targets, that are not IMPORTED into output_dependencies_list.
+# The dependencies are included only if they are CMDEF targets.
+#
+# Function finds all linked libraries of the main_target and then recursively checks their dependencies.
+#
+# [Arguments]
+# main_target - package target, for which we want to check and include dependencies
+# output_dependencies_list - output variable to store dependencies of the main target
+#
+FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES main_target output_dependencies_list)
 	SET(dependencies)
 
 	GET_TARGET_PROPERTY(linked_libraries ${main_target} INTERFACE_LINK_LIBRARIES)
@@ -171,9 +182,18 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_AND_INCLUDE_DEPENDENCIES main_target output_depend
 		ENDIF()
 	ENDFOREACH ()
 
-	SET(${output_dependencies} "${dependencies_to_include}" PARENT_SCOPE)
+	SET(${output_dependencies_list} "${dependencies_to_include}" PARENT_SCOPE)
 ENDFUNCTION()
 
+##
+# HELPER
+#
+# Find and append not IMPORTED Cmake TARGETS from input_libraries into output_targets.
+#
+# [Arguments]
+# input_libraries - list of libraries to check
+# output_targets - output variable to store not IMPORTED CMake TARGETS
+#
 FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
 	SET(targets)
 	IF (input_libraries)
@@ -194,6 +214,15 @@ FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targe
 	SET(${output_targets} ${targets} PARENT_SCOPE)
 ENDFUNCTION()
 
+##
+# HELPER
+#
+# Warns if the input_library is not IMPORTED and is not in already_included_libs.
+#
+# [Arguments]
+# input_library - library to check
+# already_included_libs - list of already included libraries
+#
 FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 	GET_TARGET_PROPERTY(linked_interfaces ${input_library} INTERFACE_LINK_LIBRARIES)
 

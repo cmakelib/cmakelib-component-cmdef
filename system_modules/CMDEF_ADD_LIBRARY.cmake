@@ -19,7 +19,7 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 
 
 ##
-# It creates shared or static library.
+# It creates shared, static or interface library.
 #
 # Initialize PREFIX and SUFFIX properties
 #
@@ -33,8 +33,13 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 # library. If specified all directories specified by this property will be installed
 # into CMDEF_LIBRARY_INSTALL_DIR at target package.
 # It serve as an INTERFACE include directories for given library against linked target.
+# It is a subset of INCLUDE_DIRECTORIES.
 #
-# SOURCES - all c/cpp/h/hpp files will be added as source to given object target.
+# SOURCES - all c/cpp/h/hpp files will be added as source to given target.
+#
+# SOURCE_BASE_DIRECTORY - INTERFACE library only. It is base directory for all source files.
+# If defined, source files will be installed with relative path to this directory.
+# Else, source files will be installed directly in CMDEF_SOURCE_INSTALL_DIR
 #
 # [Custom properties]
 # CMDEF_LIBRARY - property which mark library as "created by CMDEF_ADD_LIBRARY"
@@ -66,7 +71,7 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 		P_ARGN ${ARGN}
 	)
 	# TODO check and forbid "_" in LIBRARY_GROUP name
-	# TODO set SEPARATOR
+	# TODO and set it as SEPARATOR
 
 	CMUTIL_VERSION_CHECK(${__VERSION})
 	_CMDEF_ADD_LIBRARY_CHECK_TYPE(${__TYPE})
@@ -151,8 +156,40 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 	ENDIF()
 ENDFUNCTION()
 
+##
+# Check if the target is created by CMDEF_ADD_LIBRARY
+# function.
+#
+# Set <output_var> to name of ALIASED_TARGET if created by CMDEF_ADD_LIBRARY.
+# Unset(<output_var> PARENT_SCOPE) if not created by CMDEF_ADD_LIBRARY.
+#
+# Usage:
+#	<function>(target_a output_var_name)
+#	IF(DEFINED output_var_name)
+#		MESSAGE(STATUS "Target name: ${output_var_name}")
+#	ELSE()
+#		MESSAGE(STATUS "Not a CMDEF target")
+#	ENDIF()
+#
+# <function>(
+#	<target>
+#	<output_var>
+# )
+#
+FUNCTION(CMDEF_ADD_LIBRARY_CHECK target output_var)
+	GET_PROPERTY(is_cmdef TARGET ${target} PROPERTY CMDEF_LIBRARY)
+	IF(is_cmdef)
+		SET(${output_var} "${target}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	UNSET(${output_var} PARENT_SCOPE)
+ENDFUNCTION()
 
-
+##
+# Helper
+#
+# Set BUILD_INTERFACE sources for INTERFACE library
+#
 FUNCTION(_CMDEF_ADD_LIBRARY_SET_INTERFACE_SOURCES)
 	CMLIB_PARSE_ARGUMENTS(
 		MULTI_VALUE
@@ -209,38 +246,6 @@ FUNCTION(_CMDEF_ADD_LIBRARY_SET_INTERFACE_SOURCES)
 			CMDEF_LIBRARY_BASE_DIR "${base_dir}"
 	)
 ENDFUNCTION()
-
-
-##
-# Check if the target is created by CMDEF_ADD_LIBRARY
-# function.
-#
-# Set <output_var> to name of ALIASED_TARGET if created by CMDEF_ADD_LIBRARY.
-# Unset(<output_var> PARENT_SCOPE) if not created by CMDEF_ADD_LIBRARY.
-#
-# Usage:
-#	<function>(target_a output_var_name)
-#	IF(DEFINED output_var_name)
-#		MESSAGE(STATUS "Target name: ${output_var_name}")
-#	ELSE()
-#		MESSAGE(STATUS "Not a CMDEF target")
-#	ENDIF()
-#
-# <function>(
-#	<target>
-#	<output_var>
-# )
-#
-FUNCTION(CMDEF_ADD_LIBRARY_CHECK target output_var)
-	GET_PROPERTY(is_cmdef TARGET ${target} PROPERTY CMDEF_LIBRARY)
-	IF(is_cmdef)
-		SET(${output_var} "${target}" PARENT_SCOPE)
-		RETURN()
-	ENDIF()
-	UNSET(${output_var} PARENT_SCOPE)
-ENDFUNCTION()
-
-
 
 ## Helper
 #
