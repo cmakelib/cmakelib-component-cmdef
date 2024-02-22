@@ -144,7 +144,15 @@ MACRO(_CMDEF_ENV_SET_PACKAGE os_name)
 	)
 ENDMACRO()
 
-
+## Helper
+# Set naming convention variables
+#
+FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
+	SET(CMDEF_ENV_NAME_SEPARATOR "_"
+			CACHE STRING
+			"Separator for package name"
+	)
+ENDFUNCTION()
 
 ## Helper
 # Set and control list of supported languages
@@ -521,22 +529,6 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 		RETURN()
 	ENDIF()
 	MESSAGE(FATAL_ERROR "Cannot get distro id for unknown OS ${CMDEF_OS_NAME}")
-ENDFUNCTION()
-
-FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
-	SET(CMDEF_ENV_NAME_SEPARATOR "_"
-		CACHE STRING
-		"Separator for package name"
-	)
-ENDFUNCTION()
-FUNCTION(_CMDEF_ENV_CHECK_NAMING_CONVENTION target_name)
-	IF(NOT target_name)
-		MESSAGE(FATAL_ERROR "Undefined target name!")
-	ENDIF()
-	STRING(REGEX MATCH "^[a-zA-Z0-9\-]+$" target_name_match "${target_name}")
-	IF(NOT target_name_match)
-		MESSAGE(WARNING "Target name ${target_name} does not match naming convention! Regex for target name is ^[a-zA-Z0-9\-]+$. Don't use underscore \"_\" in target name")
-	ENDIF()
 ENDFUNCTION()
 
 CMDEF_ENV_INIT()
