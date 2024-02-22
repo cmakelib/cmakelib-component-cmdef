@@ -39,7 +39,7 @@ FUNCTION(CMDEF_ENV_INIT)
 	_CMDEF_ENV_SET_OUTPUT_DIR()
 	_CMDEF_ENV_SET_TARGET_INSTALL_DIR()
 	_CMDEF_ENV_SET_DESCRIPTION()
-
+	_CMDEF_ENV_SET_NAMING_CONVENTION()
 	_CMDEF_ENV_SET_SUPPORTED_LANG()
 
 	IF(CMDEF_OS_WINDOWS)
@@ -523,5 +523,20 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 	MESSAGE(FATAL_ERROR "Cannot get distro id for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
 
+FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
+	SET(CMDEF_ENV_NAME_SEPARATOR "_"
+		CACHE STRING
+		"Separator for package name"
+	)
+ENDFUNCTION()
+FUNCTION(_CMDEF_ENV_CHECK_NAMING_CONVENTION target_name)
+	IF(NOT target_name)
+		MESSAGE(FATAL_ERROR "Undefined target name!")
+	ENDIF()
+	STRING(REGEX MATCH "^[a-zA-Z0-9\-]+$" target_name_match "${target_name}")
+	IF(NOT target_name_match)
+		MESSAGE(WARNING "Target name ${target_name} does not match naming convention! Regex for target name is ^[a-zA-Z0-9\-]+$. Don't use underscore \"_\" in target name")
+	ENDIF()
+ENDFUNCTION()
 
 CMDEF_ENV_INIT()

@@ -37,7 +37,7 @@ CMDEF_COMPILE_DEFINITIONS(
 # other compile time options from defined interface to testlib
 #
 CMDEF_ADD_LIBRARY(
-	LIBRARY_GROUP interfacelib_second
+	LIBRARY_GROUP interfacelib-second
 	TYPE INTERFACE
 	SOURCES sources/second/InterfaceSecond.cpp sources/second/InterfaceFirst.cpp
 	INSTALL_INCLUDE_DIRECTORIES "include_second/"
@@ -50,7 +50,7 @@ CMDEF_ADD_LIBRARY(
 # Note:
 #
 CMDEF_ADD_LIBRARY(
-	LIBRARY_GROUP interfacelib_third
+	LIBRARY_GROUP interfacelib-third
 	TYPE INTERFACE
 	SOURCES 					sources/third/InterfaceThird.cpp
 	SOURCE_BASE_DIRECTORY       sources/ # Needed only for library installation
@@ -75,13 +75,13 @@ CMDEF_ADD_LIBRARY(
 # Inherit all needed interface related stuff for build of testlib.
 # Make it PRIVATE so it will not be exported as part of the installation or package
 #
-TARGET_LINK_LIBRARIES(testlib-shared PRIVATE interfacelib_second-interface)
+TARGET_LINK_LIBRARIES(testlib-shared PRIVATE interfacelib-second-interface)
 
 #
 # Link interface which will be then installed together with
 # a shared library. 
 #
-TARGET_LINK_LIBRARIES(testlib-shared INTERFACE interfacelib_third-interface)
+TARGET_LINK_LIBRARIES(testlib-shared INTERFACE interfacelib-third-interface)
 
 
 #
@@ -89,11 +89,11 @@ TARGET_LINK_LIBRARIES(testlib-shared INTERFACE interfacelib_third-interface)
 # and all symbols are available
 #
 CMDEF_ADD_EXECUTABLE(
-	TARGET testlink_executable
+	TARGET testlink-executable
 	SOURCES main.cpp
 	VERSION 1.5.0
 )
-TARGET_LINK_LIBRARIES(testlink_executable PRIVATE testlib-shared)
+TARGET_LINK_LIBRARIES(testlink-executable PRIVATE testlib-shared)
 
 #
 # Specify -Wall for target 'testlib'
@@ -117,7 +117,7 @@ CMDEF_INSTALL(
 # Install testlib for given set of configurations.
 #
 CMDEF_INSTALL(
-	TARGET interfacelib_third-interface
+	TARGET interfacelib-third-interface
 	CONFIGURATIONS Debug
 )
 
