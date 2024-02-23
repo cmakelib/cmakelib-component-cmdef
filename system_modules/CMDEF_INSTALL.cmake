@@ -19,11 +19,16 @@ FIND_PACKAGE(CMLIB)
 # target only for given list of build types.
 # If no CONFIGURATIONS is specified that the target is installed
 # for each build type
-#
+# TODO NAMESPACE and write all consequences a constraints - must be the same as main target name - check in CMDEF_PACKAGE
+# NAMESPACE - Sets the namespace for the exported library and the export file path. The path is set to lib/cmake/<namespace>
+# It must be equal to main target's name, to be findable with the package. This is checked in CMDEF_PACKAGE.
+# It must end with CMDEF_ENV_NAMESPACE_SUFFIX (::). This is then removed for path creation.
 # Workflow:
 # - If the given target has INSTALL_INCLUDE_DIRECTORIES property
 #   (created by CMDEF_ADD_LIBRARY)
 # - Set DESTINATION for all types
+#
+# NO_INSTALL_CONFIG - if set, the export file is not installed. This is usable for creating virtual targets.
 #
 # <function>(
 #		TARGET <target>
@@ -36,15 +41,14 @@ FUNCTION(CMDEF_INSTALL)
 			CONFIGURATIONS
 		ONE_VALUE
 			TARGET
-			#TODO add NAMESPACE
+			NAMESPACE
 		OPTIONS
-			NO_INSTALL_CONFIG # TODO check and if useless delete
+			NO_INSTALL_CONFIG
 		REQUIRED
 			TARGET
+			NAMESPACE
 		P_ARGN ${ARGN}
 	)
-
-	# TODO - gather all CMDEF libraries
 
 	IF(NOT DEFINED __CONFIGURATIONS)
 		SET(__CONFIGURATIONS ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
@@ -52,6 +56,8 @@ FUNCTION(CMDEF_INSTALL)
 
 	SET(original_target ${__TARGET})
 	CMDEF_ADD_LIBRARY_CHECK(${__TARGET} cmdef_target)
+	# TODO Installing executable with NAMESPACE is not supported yet
+	_CMDEF_INSTALL_CHECK_NAMESPACE(${__NAMESPACE})
 	IF(cmdef_target)
 		SET(original_target ${cmdef_target})
 
@@ -67,7 +73,10 @@ FUNCTION(CMDEF_INSTALL)
 		ENDIF()
 	ENDIF()
 
-	SET_TARGET_PROPERTIES(${original_target} PROPERTIES CMDEF_INSTALL ON)
+	_CMDEF_INSTALL_STRIP_SUFFIX(${__NAMESPACE} striped_namespace)
+	SET_TARGET_PROPERTIES(${original_target} PROPERTIES CMDEF_INSTALL ON
+														CMDEF_NAMESPACE ${striped_namespace}
+	)
 
 	SET(file_set)
 	IF(CMAKE_MINOR_VERSION GREATER 23)
@@ -92,13 +101,38 @@ FUNCTION(CMDEF_INSTALL)
 	IF(DEFINED __NO_INSTALL_CONFIG AND NOT __NO_INSTALL_CONFIG)
 		INSTALL(EXPORT ${original_target}
 			CONFIGURATIONS ${__CONFIGURATIONS}
-			DESTINATION "cmake/" #TODO add package name to path
-			# TODO Add NAMESPACE
+			DESTINATION "lib/cmake/${striped_namespace}/"
+			NAMESPACE ${__NAMESPACE}
 		)
+	ELSE ()
+		SET_TARGET_PROPERTIES(${original_target} PROPERTIES CMDEF_NO_INSTALL_CONFIG ON)
+		MESSAGE(WARNING "Use of Deprecated NO_INSTALL_CONFIG. It might get removed in the future.")
 	ENDIF()
 
 ENDFUNCTION()
 
+##
+# It checks if the given target is installed by CMDEF_INSTALL.
+# <function> (
+# 		TARGET     <target>
+#		OUTPUT_VAR <output_var>
+# )
+#
+FUNCTION(CMDEF_INSTALL_USED_FOR)
+	CMLIB_PARSE_ARGUMENTS(
+			ONE_VALUE
+			TARGET OUTPUT_VAR
+			REQUIRED
+			TARGET OUTPUT_VAR
+			P_ARGN ${ARGN}
+	)
+	GET_TARGET_PROPERTY(is_installed_by_cmdef ${__TARGET} CMDEF_INSTALL)
+	IF(NOT is_installed_by_cmdef)
+		UNSET("${__OUTPUT_VAR}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	SET("${__OUTPUT_VAR}" ON PARENT_SCOPE)
+ENDFUNCTION()
 
 ##
 # It installs sources of the given target.
@@ -166,26 +200,34 @@ FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 
 ENDFUNCTION()
 
+##
+# HELPER
+#
+# It checks if the namespace is valid and ends with correct namespace suffix
+#
+FUNCTION(_CMDEF_INSTALL_CHECK_NAMESPACE namespace)
+	IF(NOT namespace)
+		MESSAGE(FATAL_ERROR "Namespace must be specified")
+	ENDIF()
+	CMDEF_HELPERS_IS_NAME_VALID(${namespace})
+	STRING(REGEX MATCH "${CMDEF_ENV_NAMESPACE_SUFFIX}$" namespace_ends_with_double_colon ${namespace})
+	IF(NOT namespace_ends_with_double_colon)
+		MESSAGE(FATAL_ERROR "Namespace must end with ${CMDEF_ENV_NAMESPACE_SUFFIX}.")
+	ENDIF()
+ENDFUNCTION()
 
 ##
+# HELPER
 #
-# <function> (
-# 		TARGET     <target>
-#		OUTPUT_VAR <output_var>
-# )
+# It strips SUFFIX from the namespace
 #
-FUNCTION(CMDEF_INSTALL_USED_FOR)
-	CMLIB_PARSE_ARGUMENTS(
-		ONE_VALUE
-			TARGET OUTPUT_VAR
-		REQUIRED
-			TARGET OUTPUT_VAR
-		P_ARGN ${ARGN}
-	)
-	GET_TARGET_PROPERTY(is_installed_by_cmdef ${__TARGET} CMDEF_INSTALL)
-	IF(NOT is_installed_by_cmdef)
-		UNSET("${__OUTPUT_VAR}" PARENT_SCOPE)
-		RETURN()
-	ENDIF()
-	SET("${__OUTPUT_VAR}" ON PARENT_SCOPE)
+FUNCTION(_CMDEF_INSTALL_STRIP_SUFFIX namespace output_name)
+	STRING(LENGTH ${namespace} namespace_length)
+	STRING(LENGTH ${CMDEF_ENV_NAMESPACE_SUFFIX} namespace_suffix_length)
+	MATH(EXPR namespace_length "${namespace_length} - ${namespace_suffix_length}")
+	STRING(SUBSTRING ${namespace} 0 ${namespace_length} namespace)
+	SET(${output_name} ${namespace} PARENT_SCOPE)
 ENDFUNCTION()
+
+
+

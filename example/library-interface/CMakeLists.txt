@@ -94,7 +94,7 @@ CMDEF_ADD_EXECUTABLE(
 	VERSION 1.5.0
 )
 TARGET_LINK_LIBRARIES(testlink-executable PRIVATE testlib-shared)
-
+CMDEF_INSTALL(TARGET testlink-executable NAMESPACE testlib-shared::)
 #
 # Specify -Wall for target 'testlib'
 # and make the compile option public
@@ -111,6 +111,7 @@ CMDEF_COMPILE_OPTIONS_TARGET(
 CMDEF_INSTALL(
 	TARGET testlib-shared
 	CONFIGURATIONS Debug
+	NAMESPACE testlib-shared::
 )
 
 #
@@ -119,6 +120,7 @@ CMDEF_INSTALL(
 CMDEF_INSTALL(
 	TARGET interfacelib-third-interface
 	CONFIGURATIONS Debug
+	NAMESPACE testlib-shared::
 )
 
 #

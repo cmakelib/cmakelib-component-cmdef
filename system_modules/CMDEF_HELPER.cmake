@@ -1,7 +1,7 @@
 ##
 # It checks if target name contains SEPARATOR character defined in CMDEF_ENV
 #
-FUNCTION(CMDEF_HELPERS_IS_TARGET_NAME_VALID target_name)
+FUNCTION(CMDEF_HELPERS_IS_NAME_VALID target_name)
     IF(NOT target_name)
         MESSAGE(FATAL_ERROR "target_name is not set")
     ENDIF()

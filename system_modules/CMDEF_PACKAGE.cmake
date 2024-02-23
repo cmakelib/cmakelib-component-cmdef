@@ -82,6 +82,7 @@ FUNCTION(CMDEF_PACKAGE)
 
 	_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
 	LIST(APPEND targets_to_include ${__MAIN_TARGET})
+	_CMDEF_PACKAGE_CHECK_NAMESPACE(${__MAIN_TARGET} "${targets_to_include}")
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	IF(DEFINED __CONFIGURATIONS)
@@ -102,7 +103,7 @@ FUNCTION(CMDEF_PACKAGE)
 	CONFIGURE_PACKAGE_CONFIG_FILE(
 		"${_CMDEF_PACKAGE_CURRENT_DIR}/resources/cmake_package_config.cmake.in"
 		"${package_config_file}"
-		INSTALL_DESTINATION "cmake/"
+		INSTALL_DESTINATION "lib/cmake/${__MAIN_TARGET}/"
 	)
 
 	WRITE_BASIC_PACKAGE_VERSION_FILE(
@@ -111,7 +112,7 @@ FUNCTION(CMDEF_PACKAGE)
 		COMPATIBILITY SameMajorVersion
 	)
 	INSTALL(FILES "${package_config_file}" "${package_version_file}"
-		DESTINATION "cmake/"
+		DESTINATION "lib/cmake/${__MAIN_TARGET}/"
 	)
 
 	SET(package_name_suffix)
@@ -165,6 +166,7 @@ FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES main_target output_dependenc
 
 	GET_TARGET_PROPERTY(linked_libraries ${main_target} INTERFACE_LINK_LIBRARIES)
 	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libraries}" dependencies)
+
 	# TODO redundant? INTERFACE_LINK_LIBRARIES seems to find everything, but from documentation I didnt understand the function to do so
 	#[[GET_TARGET_PROPERTY(linked_libs ${main_target} LINK_LIBRARIES)
 	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
@@ -178,7 +180,15 @@ FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES main_target output_dependenc
 	FOREACH (target IN LISTS dependencies)
 		CMDEF_ADD_LIBRARY_CHECK(${target} is_cmdef_target)
 		IF(is_cmdef_target)
-			LIST(APPEND dependencies_to_include ${target})
+			CMDEF_INSTALL_USED_FOR(TARGET ${target} OUTPUT_VAR is_installed)
+			IF(is_installed)
+				GET_TARGET_PROPERTY(no_install_config ${target} CMDEF_NO_INSTALL_CONFIG)
+				IF(NOT no_install_config)
+					LIST(APPEND dependencies_to_include ${target})
+				ENDIF ()
+			ELSE ()
+				MESSAGE(FATAL_ERROR "Dependency ${target} is not installed")
+			ENDIF ()
 		ENDIF()
 	ENDFOREACH ()
 
@@ -234,4 +244,19 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 			ENDIF ()
 		ENDFOREACH ()
 	ENDIF ()
+ENDFUNCTION()
+
+##
+# Helper
+#
+# It goes over all direct dependencies of the main target and checks if they are in the same namespace.
+# This namespace is the same as the main target's name.
+#
+FUNCTION(_CMDEF_PACKAGE_CHECK_NAMESPACE main_target dependencies)
+	FOREACH (dependency IN LISTS dependencies)
+		GET_TARGET_PROPERTY(namespace ${dependency} CMDEF_NAMESPACE)
+		IF (NOT "${namespace}" STREQUAL "${main_target}")
+			MESSAGE(FATAL_ERROR "Namespace of dependency \"${dependency}\" is not the same as the main targets name \"${main_target}\"")
+		ENDIF ()
+	ENDFOREACH ()
 ENDFUNCTION()

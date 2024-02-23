@@ -152,6 +152,10 @@ FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
 			CACHE STRING
 			"Separator for package name"
 	)
+	SET(CMDEF_ENV_NAMESPACE_SUFFIX "::"
+			CACHE STRING
+			"Suffix for namespace"
+	)
 ENDFUNCTION()
 
 ## Helper
