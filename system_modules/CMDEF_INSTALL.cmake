@@ -46,7 +46,6 @@ FUNCTION(CMDEF_INSTALL)
 			NO_INSTALL_CONFIG
 		REQUIRED
 			TARGET
-			NAMESPACE
 		P_ARGN ${ARGN}
 	)
 
@@ -55,9 +54,19 @@ FUNCTION(CMDEF_INSTALL)
 	ENDIF()
 
 	SET(original_target ${__TARGET})
+
+	IF(DEFINED __NAMESPACE)
+		_CMDEF_INSTALL_CHECK_NAMESPACE(${__NAMESPACE})
+		_CMDEF_INSTALL_STRIP_NAMESPACE_SUFFIX(${__NAMESPACE} striped_namespace)
+		SET_TARGET_PROPERTIES(${original_target} PROPERTIES
+				CMDEF_NAMESPACE ${striped_namespace}
+		)
+	ELSE ()
+		SET(__NAMESPACE "")
+		SET(striped_namespace "")
+	ENDIF()
+
 	CMDEF_ADD_LIBRARY_CHECK(${__TARGET} cmdef_target)
-	# TODO Installing executable with NAMESPACE is not supported yet
-	_CMDEF_INSTALL_CHECK_NAMESPACE(${__NAMESPACE})
 	IF(cmdef_target)
 		SET(original_target ${cmdef_target})
 
@@ -73,9 +82,8 @@ FUNCTION(CMDEF_INSTALL)
 		ENDIF()
 	ENDIF()
 
-	_CMDEF_INSTALL_STRIP_SUFFIX(${__NAMESPACE} striped_namespace)
-	SET_TARGET_PROPERTIES(${original_target} PROPERTIES CMDEF_INSTALL ON
-														CMDEF_NAMESPACE ${striped_namespace}
+	SET_TARGET_PROPERTIES(${original_target} PROPERTIES
+			CMDEF_INSTALL ON
 	)
 
 	SET(file_set)
@@ -101,7 +109,7 @@ FUNCTION(CMDEF_INSTALL)
 	IF(DEFINED __NO_INSTALL_CONFIG AND NOT __NO_INSTALL_CONFIG)
 		INSTALL(EXPORT ${original_target}
 			CONFIGURATIONS ${__CONFIGURATIONS}
-			DESTINATION "lib/cmake/${striped_namespace}/"
+			DESTINATION "${CMDEF_TARGET_INSTALL_DIRECTORY}/${striped_namespace}/"
 			NAMESPACE ${__NAMESPACE}
 		)
 	ELSE ()
@@ -207,7 +215,7 @@ ENDFUNCTION()
 #
 FUNCTION(_CMDEF_INSTALL_CHECK_NAMESPACE namespace)
 	IF(NOT namespace)
-		MESSAGE(FATAL_ERROR "Namespace must be specified")
+		RETURN()
 	ENDIF()
 	CMDEF_HELPERS_IS_NAME_VALID(${namespace})
 	STRING(REGEX MATCH "${CMDEF_ENV_NAMESPACE_SUFFIX}$" namespace_ends_with_double_colon ${namespace})
@@ -221,7 +229,11 @@ ENDFUNCTION()
 #
 # It strips SUFFIX from the namespace
 #
-FUNCTION(_CMDEF_INSTALL_STRIP_SUFFIX namespace output_name)
+FUNCTION(_CMDEF_INSTALL_STRIP_NAMESPACE_SUFFIX namespace output_name)
+	IF(NOT namespace)
+#		SET(${output_name} "" PARENT_SCOPE)
+		RETURN()
+	ENDIF ()
 	STRING(LENGTH ${namespace} namespace_length)
 	STRING(LENGTH ${CMDEF_ENV_NAMESPACE_SUFFIX} namespace_suffix_length)
 	MATH(EXPR namespace_length "${namespace_length} - ${namespace_suffix_length}")

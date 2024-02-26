@@ -349,6 +349,11 @@ MACRO(_CMDEF_ENV_SET_OUTPUT_DIR)
 		CACHE PATH
 		"Output directory for CMake targets"
 	)
+
+	SET(CMDEF_TARGET_INSTALL_DIRECTORY "lib/cmake/"
+		CACHE PATH
+		"Install directory for CMake targets"
+	)
 ENDMACRO()
 
 

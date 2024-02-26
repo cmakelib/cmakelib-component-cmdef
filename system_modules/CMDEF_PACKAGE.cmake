@@ -36,6 +36,11 @@ FIND_PACKAGE(CMLIB)
 # with new CPack configuration file and config.
 # (Due to compatibility with multiconfig)
 #
+# If MAIN_TARGET is created and installed by CMDEF,
+# it will check dependencies and include direct, not imported and created by CMDEF in the target package.
+# These dependencies must be in the same namespace as the MAIN_TARGET.
+# NAMESPACE of the MAIN_TARGET is the same as the MAIN_TARGET's name.
+#
 # [Arguments]
 # MAIN_TARGET is main target (Definition in README.md).
 # Basicaly it represents target which will serve as reference
@@ -76,13 +81,13 @@ FUNCTION(CMDEF_PACKAGE)
 
 	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_library)
 	CMDEF_ADD_EXECUTABLE_CHECK(${__MAIN_TARGET} cmdef_executable)
-	IF(NOT cmdef_library AND NOT cmdef_executable)
-		MESSAGE(FATAL_ERROR "Target ${__MAIN_TARGET} is not a CMLib target")
+	IF(cmdef_library OR cmdef_executable)
+		_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
+		LIST(APPEND targets_to_include ${__MAIN_TARGET})
+		_CMDEF_PACKAGE_CHECK_NAMESPACE(${__MAIN_TARGET} "${targets_to_include}")
 	ENDIF()
 
-	_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
-	LIST(APPEND targets_to_include ${__MAIN_TARGET})
-	_CMDEF_PACKAGE_CHECK_NAMESPACE(${__MAIN_TARGET} "${targets_to_include}")
+
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	IF(DEFINED __CONFIGURATIONS)
@@ -103,7 +108,7 @@ FUNCTION(CMDEF_PACKAGE)
 	CONFIGURE_PACKAGE_CONFIG_FILE(
 		"${_CMDEF_PACKAGE_CURRENT_DIR}/resources/cmake_package_config.cmake.in"
 		"${package_config_file}"
-		INSTALL_DESTINATION "lib/cmake/${__MAIN_TARGET}/"
+		INSTALL_DESTINATION "${CMDEF_TARGET_INSTALL_DIRECTORY}/${__MAIN_TARGET}/"
 	)
 
 	WRITE_BASIC_PACKAGE_VERSION_FILE(
@@ -112,7 +117,7 @@ FUNCTION(CMDEF_PACKAGE)
 		COMPATIBILITY SameMajorVersion
 	)
 	INSTALL(FILES "${package_config_file}" "${package_version_file}"
-		DESTINATION "lib/cmake/${__MAIN_TARGET}/"
+		DESTINATION "${CMDEF_TARGET_INSTALL_DIRECTORY}/${__MAIN_TARGET}/"
 	)
 
 	SET(package_name_suffix)
@@ -179,7 +184,7 @@ FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES main_target output_dependenc
 	SET(dependencies_to_include)
 	FOREACH (target IN LISTS dependencies)
 		CMDEF_ADD_LIBRARY_CHECK(${target} is_cmdef_target)
-		IF(is_cmdef_target)
+		IF(is_cmdef_target) # TODO zanoreni ifu na jednu uroven
 			CMDEF_INSTALL_USED_FOR(TARGET ${target} OUTPUT_VAR is_installed)
 			IF(is_installed)
 				GET_TARGET_PROPERTY(no_install_config ${target} CMDEF_NO_INSTALL_CONFIG)
@@ -206,15 +211,20 @@ ENDFUNCTION()
 #
 FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
 	SET(targets)
-	IF (input_libraries)
-		FOREACH (input_library IN LISTS input_libraries)
-			IF (TARGET ${input_library})
-				IF (NOT "${${input_library}_IMPORTED}")
-					SET(targets ${targets} ${input_library})
-				ENDIF ()
-			ENDIF ()
-		ENDFOREACH ()
+	IF (NOT input_libraries)
+		RETURN()
 	ENDIF ()
+
+	FOREACH (input_library IN LISTS input_libraries)
+		IF (NOT TARGET ${input_library})
+			CONTINUE()
+		ENDIF ()
+
+		GET_TARGET_PROPERTY(imported ${input_library} IMPORTED)
+		IF (NOT imported)
+			LIST(APPEND targets ${input_library})
+		ENDIF ()
+	ENDFOREACH ()
 
 	SET(${output_targets} ${targets} PARENT_SCOPE)
 ENDFUNCTION()
@@ -230,33 +240,38 @@ ENDFUNCTION()
 #
 FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 	GET_TARGET_PROPERTY(linked_interfaces ${input_library} INTERFACE_LINK_LIBRARIES)
-
-	IF (linked_interfaces)
-		FOREACH (linked_lib IN LISTS linked_interfaces)
-			IF (TARGET ${linked_lib})
-				GET_TARGET_PROPERTY(imported ${linked_lib} IMPORTED)
-				IF (NOT ${imported})
-					IF (NOT "${linked_lib}" IN_LIST already_included_libs)
-						# TODO rewrite for more clarity
-						MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${input_library}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
-					ENDIF ()
-				ENDIF ()
-			ENDIF ()
-		ENDFOREACH ()
+	IF (NOT linked_interfaces)
+		RETURN()
 	ENDIF ()
+
+	FOREACH (linked_lib IN LISTS linked_interfaces)
+		IF (NOT TARGET ${linked_lib})
+			CONTINUE()
+		ENDIF ()
+		GET_TARGET_PROPERTY(imported ${linked_lib} IMPORTED)
+		IF (imported)
+			CONTINUE()
+		ENDIF ()
+		IF (NOT "${linked_lib}" IN_LIST already_included_libs)
+			# TODO rewrite for more clarity
+			MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${input_library}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
+		ENDIF ()
+	ENDFOREACH ()
 ENDFUNCTION()
 
 ##
 # Helper
 #
-# It goes over all direct dependencies of the main target and checks if they are in the same namespace.
-# This namespace is the same as the main target's name.
+# It goes over all direct include targets of the main target and checks namespace
+# If a namespace is defined, they have to be in the same namespace.
+# This namespace is the same as the main target's name. And targets are added to namespace_include_targets.
+# Else if the target has no namespace, it is added to include_targets.
 #
 FUNCTION(_CMDEF_PACKAGE_CHECK_NAMESPACE main_target dependencies)
 	FOREACH (dependency IN LISTS dependencies)
 		GET_TARGET_PROPERTY(namespace ${dependency} CMDEF_NAMESPACE)
 		IF (NOT "${namespace}" STREQUAL "${main_target}")
-			MESSAGE(FATAL_ERROR "Namespace of dependency \"${dependency}\" is not the same as the main targets name \"${main_target}\"")
+			MESSAGE(FATAL_ERROR "NAMESPACE of target \"${dependency}\" is not the same as the main target's name \"${main_target}\".")
 		ENDIF ()
 	ENDFOREACH ()
 ENDFUNCTION()
