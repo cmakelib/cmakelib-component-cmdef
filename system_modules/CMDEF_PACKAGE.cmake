@@ -177,25 +177,10 @@ FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES main_target output_dependenc
 	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
 	SET(dependencies ${dependencies} ${target_libs}) ]]
 
-	FOREACH (output_dependency IN LISTS dependencies)
-		_CMDEF_PACKAGE_CHECK_DEPENDENCIES("${output_dependency}" "${dependencies}")
+	FOREACH (dependency IN LISTS dependencies)
+		_CMDEF_PACKAGE_CHECK_DEPENDENCIES("${dependency}" "${dependencies}")
 	ENDFOREACH ()
-
-	SET(dependencies_to_include)
-	FOREACH (target IN LISTS dependencies)
-		CMDEF_ADD_LIBRARY_CHECK(${target} is_cmdef_target)
-		IF(is_cmdef_target) # TODO zanoreni ifu na jednu uroven
-			CMDEF_INSTALL_USED_FOR(TARGET ${target} OUTPUT_VAR is_installed)
-			IF(is_installed)
-				GET_TARGET_PROPERTY(no_install_config ${target} CMDEF_NO_INSTALL_CONFIG)
-				IF(NOT no_install_config)
-					LIST(APPEND dependencies_to_include ${target})
-				ENDIF ()
-			ELSE ()
-				MESSAGE(FATAL_ERROR "Dependency ${target} is not installed")
-			ENDIF ()
-		ENDIF()
-	ENDFOREACH ()
+	_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF(${main_target} "${dependencies}" dependencies_to_include)
 
 	SET(${output_dependencies_list} "${dependencies_to_include}" PARENT_SCOPE)
 ENDFUNCTION()
@@ -211,9 +196,6 @@ ENDFUNCTION()
 #
 FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
 	SET(targets)
-	IF (NOT input_libraries)
-		RETURN()
-	ENDIF ()
 
 	FOREACH (input_library IN LISTS input_libraries)
 		IF (NOT TARGET ${input_library})
@@ -257,6 +239,33 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 			MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${input_library}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
 		ENDIF ()
 	ENDFOREACH ()
+ENDFUNCTION()
+
+##
+# HELPER
+#
+# Checks if the dependencies are CMDEF targets and if they are installed.
+# If the target is installed, it is added to the output_installed_cmdef_targets.
+# If the target is not installed, the function will fail.
+#
+FUNCTION(_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF target dependencies output_installed_cmdef_targets)
+	SET(dependencies_to_include)
+	FOREACH (target IN LISTS dependencies)
+		CMDEF_ADD_LIBRARY_CHECK(${target} is_cmdef_target)
+		IF(NOT is_cmdef_target)
+			CONTINUE()
+		ENDIF ()
+		CMDEF_INSTALL_USED_FOR(TARGET ${target} OUTPUT_VAR is_installed)
+		IF(is_installed)
+			GET_TARGET_PROPERTY(no_install_config ${target} CMDEF_NO_INSTALL_CONFIG)
+			IF(NOT no_install_config)
+				LIST(APPEND dependencies_to_include ${target})
+			ENDIF ()
+		ELSE ()
+			MESSAGE(FATAL_ERROR "Dependency ${target} is not installed")
+		ENDIF ()
+	ENDFOREACH ()
+	SET(${output_installed_cmdef_targets} "${dependencies_to_include}" PARENT_SCOPE)
 ENDFUNCTION()
 
 ##

@@ -19,10 +19,10 @@ FIND_PACKAGE(CMLIB)
 # target only for given list of build types.
 # If no CONFIGURATIONS is specified that the target is installed
 # for each build type
-# TODO NAMESPACE and write all consequences a constraints - must be the same as main target name - check in CMDEF_PACKAGE
+#
 # NAMESPACE - Sets the namespace for the exported library and the export file path. The path is set to lib/cmake/<namespace>
 # It must be equal to main target's name, to be findable with the package. This is checked in CMDEF_PACKAGE.
-# It must end with CMDEF_ENV_NAMESPACE_SUFFIX (::). This is then removed for path creation.
+# It must end with CMDEF_ENV_NAMESPACE_SUFFIX (::). The suffix is removed for path creation.
 # Workflow:
 # - If the given target has INSTALL_INCLUDE_DIRECTORIES property
 #   (created by CMDEF_ADD_LIBRARY)
@@ -231,7 +231,6 @@ ENDFUNCTION()
 #
 FUNCTION(_CMDEF_INSTALL_STRIP_NAMESPACE_SUFFIX namespace output_name)
 	IF(NOT namespace)
-#		SET(${output_name} "" PARENT_SCOPE)
 		RETURN()
 	ENDIF ()
 	STRING(LENGTH ${namespace} namespace_length)
