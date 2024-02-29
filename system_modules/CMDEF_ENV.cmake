@@ -7,12 +7,9 @@
 # - CMAKE_CURRENT_BINARY_DIR (defined as "${CMAKE_CURRENT_LIST_DIR}" for script mode)
 #
 
-IF(DEFINED CMDEF_ENV_MODULE)
-	RETURN()
-ENDIF()
-SET(CMDEF_ENV_MODULE 1)
+INCLUDE_GUARD(GLOBAL)
 
-FIND_PACKAGE(CMLIB)
+FIND_PACKAGE(CMLIB REQUIRED)
 
 #
 # Variable that is defined only as local.
@@ -144,6 +141,8 @@ MACRO(_CMDEF_ENV_SET_PACKAGE os_name)
 	)
 ENDMACRO()
 
+
+
 ## Helper
 # Set naming convention variables
 #
@@ -160,6 +159,8 @@ FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
 			"Suffix for namespace"
 	)
 ENDFUNCTION()
+
+
 
 ## Helper
 # Set and control list of supported languages
@@ -191,26 +192,6 @@ FUNCTION(_CMDEF_ENV_SET_SUPPORTED_LANG)
 	SET(CMDEF_LANG_RC_SOURCE_FILE_EXTENSIONS .rc
 		CACHE STRING
 		"List of RC source file extensions"
-	)
-	SET(all_extensions)
-	FOREACH(lang_suffix IN LISTS CMDEF_SUPPORTED_LANG_LIST)
-		STRING(TOUPPER ${lang_suffix} lang_suffix_upper)
-		SET(var_name CMDEF_LANG_${lang_suffix_upper}_SOURCE_FILE_EXTENSIONS)
-		IF(NOT DEFINED ${var_name})
-			MESSAGE(FATAL_ERROR "Language ${lang_suffix_upper} has no source file extension defined!")
-		ENDIF()
-		LIST(APPEND all_extensions "${${var_name}}")
-	ENDFOREACH()
-	FOREACH(lang_suffix IN LISTS all_extensions)
-		STRING(REGEX MATCH "^\\..*" lang_suffix_match_format "${lang_suffix}")
-		IF(NOT lang_suffix_match_format)
-			MESSAGE(FATAL_ERROR "Language source file extension ${lang_suffix} has wrong format! Missing '.'.")
-		ENDIF()
-	ENDFOREACH()
-	LIST(REMOVE_DUPLICATES all_extensions)
-	SET(CMDEF_SUPPORTED_LANG_SOURCE_EXT_LIST ${all_extensions}
-		CACHE STRING
-		"All extensions for supported languages"
 	)
 ENDFUNCTION()
 

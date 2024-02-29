@@ -3,20 +3,19 @@
 # Contains helper functions for CMDEF modules
 #
 
-IF(DEFINED CMDEF_HELPER_MODULE)
-    RETURN()
-ENDIF()
-SET(CMDEF_HELPER_MODULE 1)
+INCLUDE_GUARD(GLOBAL)
 
-FIND_PACKAGE(CMLIB)
+FIND_PACKAGE(CMLIB REQUIRED)
+
+
 
 ##
-# It checks if target name contains SEPARATOR character defined in CMDEF_ENV
+# It checks if target name contains ${CMDEF_ENV_NAME_SEPARATOR} character defined by CMDEF_ENV
 #
 # <function>(
 #   <target_name>
 # )
-FUNCTION(CMDEF_HELPERS_IS_TARGET_NAME_VALID target_name)
+FUNCTION(CMDEF_HELPER_IS_TARGET_NAME_VALID target_name)
     IF(NOT target_name)
         MESSAGE(FATAL_ERROR "target_name is not set")
     ENDIF()
