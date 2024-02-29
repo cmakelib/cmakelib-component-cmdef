@@ -171,7 +171,7 @@ ENDFUNCTION()
 #
 # <function>(
 #	<target>
-#	<output_var>
+#	<output_var>	// UNSET if not created by CMDEF_ADD_LIBRARY, else set to name of the target
 # )
 #
 FUNCTION(CMDEF_ADD_LIBRARY_CHECK target output_var)

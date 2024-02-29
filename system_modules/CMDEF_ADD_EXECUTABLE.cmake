@@ -115,7 +115,7 @@ ENDFUNCTION()
 #
 # <function>(
 #	<target>
-#	<output_var>
+#	<output_var>	# UNSET if not created by CMDEF_ADD_EXECUTABLE, else set to target name
 # )
 #
 FUNCTION(CMDEF_ADD_EXECUTABLE_CHECK target output_var)
