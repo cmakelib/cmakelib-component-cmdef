@@ -274,7 +274,6 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
 			CONTINUE()
 		ENDIF ()
 		IF (NOT "${linked_lib}" IN_LIST ____ALREADY_LINKED_LIBS)
-			# TODO rewrite for more clarity
 			MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${input_library}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
 		ENDIF ()
 	ENDFOREACH ()

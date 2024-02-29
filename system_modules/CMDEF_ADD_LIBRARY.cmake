@@ -226,14 +226,6 @@ FUNCTION(_CMDEF_ADD_LIBRARY_SET_INTERFACE_SOURCES)
 
 	SET(base_dir)
 	IF(__BASE_DIR)
-		#[[SET(ext_regexp "*${ext_regexp}")
-		LIST(JOIN CMDEF_SUPPORTED_LANG_SOURCE_EXT_LIST "|*" ext_regexp)
-
-		#TODO - it is wanted behav. to include all sources in source dir
-		#TODO and not only listed ones?
-		FILE(GLOB_RECURSE base_dir_sources "${__BASE_DIR}/${ext_regexp}")
-		LIST(APPEND all_sources "${base_dir_sources}")]]
-
 		CMAKE_PATH(IS_RELATIVE __BASE_DIR base_dir_is_relative)
 		IF(base_dir_is_relative)
 			CMAKE_PATH(APPEND CMAKE_CURRENT_LIST_DIR "${__BASE_DIR}" OUTPUT_VARIABLE base_dir)
