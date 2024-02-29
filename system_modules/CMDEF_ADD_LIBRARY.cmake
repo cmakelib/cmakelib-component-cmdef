@@ -37,8 +37,9 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #
 # SOURCES - all c/cpp/h/hpp files will be added as source to given target.
 #
-# SOURCE_BASE_DIRECTORY - INTERFACE library only. It is base directory for all source files.
-# If defined, source files will be installed with relative path to this directory.
+# SOURCE_BASE_DIRECTORY - INTERFACE library only. Only for installation.
+# It is base directory for all source files.
+# If defined, source files will be installed with relative path from this directory.
 # Else, source files will be installed directly in CMDEF_SOURCE_INSTALL_DIR
 #
 # [Custom properties]
@@ -70,7 +71,7 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 			LIBRARY_GROUP
 		P_ARGN ${ARGN}
 	)
-	CMDEF_HELPERS_IS_NAME_VALID(${__LIBRARY_GROUP})
+	CMDEF_HELPERS_IS_TARGET_NAME_VALID(${__LIBRARY_GROUP})
 	CMUTIL_VERSION_CHECK(${__VERSION})
 	_CMDEF_ADD_LIBRARY_CHECK_TYPE(${__TYPE})
 
@@ -187,12 +188,19 @@ ENDFUNCTION()
 #
 # Set BUILD_INTERFACE sources for INTERFACE library
 #
+# <function>(
+# 	TARGET <target>
+# 	[BASE_DIR <base_dir>]
+# 	[SOURCES <sources> M]
+# )
 FUNCTION(_CMDEF_ADD_LIBRARY_SET_INTERFACE_SOURCES)
 	CMLIB_PARSE_ARGUMENTS(
 		MULTI_VALUE
 			SOURCES
 		ONE_VALUE
 			TARGET BASE_DIR
+		REQUIRED
+			TARGET
 		P_ARGN ${ARGN}
 	)
 
@@ -249,6 +257,8 @@ ENDFUNCTION()
 # Setting specific only for Windows
 #
 # <function> (
+# 	<target_lib>
+# 	<version>
 # )
 #
 FUNCTION(_CMDEF_ADD_LIBRARY_WINDOWS_SETTING target_lib version)

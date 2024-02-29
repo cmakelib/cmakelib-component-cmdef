@@ -20,19 +20,23 @@ FIND_PACKAGE(CMLIB)
 # If no CONFIGURATIONS is specified that the target is installed
 # for each build type
 #
-# NAMESPACE - Sets the namespace for the exported library and the export file path. The path is set to lib/cmake/<namespace>
+# NAMESPACE - Sets the namespace for the exported library and the export file path.
+# The path is set to <CMDEF_LIBRARY_INSTALL_DIR>/cmake/<namespace>
 # It must be equal to main target's name, to be findable with the package. This is checked in CMDEF_PACKAGE.
-# It must end with CMDEF_ENV_NAMESPACE_SUFFIX (::). The suffix is removed for path creation.
+# It must end with CMDEF_ENV_NAMESPACE_SUFFIX (default "::"). The suffix is removed for path creation.
+#
+# NO_INSTALL_CONFIG - if set, the export file is not installed. This is usable for creating virtual targets.
+#
 # Workflow:
 # - If the given target has INSTALL_INCLUDE_DIRECTORIES property
 #   (created by CMDEF_ADD_LIBRARY)
 # - Set DESTINATION for all types
 #
-# NO_INSTALL_CONFIG - if set, the export file is not installed. This is usable for creating virtual targets.
-#
 # <function>(
 #		TARGET <target>
-#		[CONFIGURATIONS <configurations>]
+# 		[NAMESPACE <namespace>]
+#		[CONFIGURATIONS <configurations> M]
+#		[NO_INSTALL_CONFIG {ON|OFF}]
 # )
 #
 FUNCTION(CMDEF_INSTALL)
@@ -55,21 +59,20 @@ FUNCTION(CMDEF_INSTALL)
 
 	SET(original_target ${__TARGET})
 
+	SET(namespace)
+	SET(striped_namespace)
 	IF(DEFINED __NAMESPACE)
-		_CMDEF_INSTALL_CHECK_NAMESPACE(${__NAMESPACE})
-		_CMDEF_INSTALL_STRIP_NAMESPACE_SUFFIX(${__NAMESPACE} striped_namespace)
+		SET(namespace ${__NAMESPACE})
+		_CMDEF_INSTALL_CHECK_NAMESPACE(${namespace})
+		_CMDEF_INSTALL_STRIP_NAMESPACE_SUFFIX(${namespace} striped_namespace)
 		SET_TARGET_PROPERTIES(${original_target} PROPERTIES
 				CMDEF_NAMESPACE ${striped_namespace}
 		)
-	ELSE ()
-		SET(__NAMESPACE "")
-		SET(striped_namespace "")
 	ENDIF()
 
 	CMDEF_ADD_LIBRARY_CHECK(${__TARGET} cmdef_target)
 	IF(cmdef_target)
 		SET(original_target ${cmdef_target})
-
 		GET_PROPERTY(include_dirs TARGET ${original_target} PROPERTY CMDEF_INSTALL_INCLUDE_DIRECTORIES)
 		IF(include_dirs)
 			TARGET_INCLUDE_DIRECTORIES(${original_target} INTERFACE $<INSTALL_INTERFACE:${CMDEF_INCLUDE_INSTALL_DIR}>)
@@ -109,8 +112,8 @@ FUNCTION(CMDEF_INSTALL)
 	IF(DEFINED __NO_INSTALL_CONFIG AND NOT __NO_INSTALL_CONFIG)
 		INSTALL(EXPORT ${original_target}
 			CONFIGURATIONS ${__CONFIGURATIONS}
-			DESTINATION "${CMDEF_TARGET_INSTALL_DIRECTORY}/${striped_namespace}/"
-			NAMESPACE ${__NAMESPACE}
+			DESTINATION "${CMDEF_LIBRARY_INSTALL_DIR}/cmake/${striped_namespace}/"
+			NAMESPACE ${namespace}
 		)
 	ELSE ()
 		SET_TARGET_PROPERTIES(${original_target} PROPERTIES CMDEF_NO_INSTALL_CONFIG ON)
@@ -121,18 +124,19 @@ ENDFUNCTION()
 
 ##
 # It checks if the given target is installed by CMDEF_INSTALL.
+#
 # <function> (
-# 		TARGET     <target>
-#		OUTPUT_VAR <output_var>
+# 	TARGET     <target>
+#	OUTPUT_VAR <output_var> // The variable is set to ON if the target is installed by CMDEF_INSTALL, otherwise it is unset
 # )
 #
 FUNCTION(CMDEF_INSTALL_USED_FOR)
 	CMLIB_PARSE_ARGUMENTS(
-			ONE_VALUE
+		ONE_VALUE
 			TARGET OUTPUT_VAR
-			REQUIRED
+		REQUIRED
 			TARGET OUTPUT_VAR
-			P_ARGN ${ARGN}
+		P_ARGN ${ARGN}
 	)
 	GET_TARGET_PROPERTY(is_installed_by_cmdef ${__TARGET} CMDEF_INSTALL)
 	IF(NOT is_installed_by_cmdef)
@@ -148,6 +152,8 @@ ENDFUNCTION()
 # If the TARGET has BASE_DIR property set, then the source files are installed
 # in relative path to the BASE_DIR.
 # Otherwise all source files are installed in the root of the CMDEF_SOURCE_INSTALL_DIR
+#
+# <function>()
 #
 FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 	CMLIB_PARSE_ARGUMENTS(
@@ -211,13 +217,15 @@ ENDFUNCTION()
 ##
 # HELPER
 #
-# It checks if the namespace is valid and ends with correct namespace suffix
+# It checks if the namespace ends with correct namespace suffix defined in CMDEF_ENV_NAMESPACE_SUFFIX
 #
+# <function>(
+# 	<namespace>
+# )
 FUNCTION(_CMDEF_INSTALL_CHECK_NAMESPACE namespace)
 	IF(NOT namespace)
 		RETURN()
 	ENDIF()
-	CMDEF_HELPERS_IS_NAME_VALID(${namespace})
 	STRING(REGEX MATCH "${CMDEF_ENV_NAMESPACE_SUFFIX}$" namespace_ends_with_double_colon ${namespace})
 	IF(NOT namespace_ends_with_double_colon)
 		MESSAGE(FATAL_ERROR "Namespace must end with ${CMDEF_ENV_NAMESPACE_SUFFIX}.")
@@ -227,8 +235,12 @@ ENDFUNCTION()
 ##
 # HELPER
 #
-# It strips SUFFIX from the namespace
+# It strips suffix defined in CMDEF_ENV_NAMESPACE_SUFFIX from the namespace
 #
+# <function>(
+# 	<namespace>
+# 	<output_name> // The variable is set to the namespace without the suffix
+# )
 FUNCTION(_CMDEF_INSTALL_STRIP_NAMESPACE_SUFFIX namespace output_name)
 	IF(NOT namespace)
 		RETURN()

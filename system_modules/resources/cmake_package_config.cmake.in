@@ -1,4 +1,16 @@
 @PACKAGE_INIT@
+
+##
+# Include targets configurations
+#
+# It goes over all targets in include_targets_names list and includes their configuration files.
+# The configuration files are expected to be in the same directory as this file and have the same name as the target.
+# This is achieved by using the whole CMDEF chain for target creation, install and package generation.
+#
+# <function>(
+#   <include_targets_names>
+# )
+#
 FUNCTION(__INCLUDE_TARGETS_CONFIGS include_targets_names)
     SET(namespace "@__MAIN_TARGET@::")
     FOREACH(target IN LISTS include_targets_names)
@@ -9,6 +21,16 @@ FUNCTION(__INCLUDE_TARGETS_CONFIGS include_targets_names)
     ENDFOREACH()
 ENDFUNCTION()
 
+##
+# Set interface target sources
+#
+# It gets the list of sources from the target and sets them as INTERFACE sources for the target.
+# The sources can be set for INTERFACE libraries only and they are set in CMDEF_INSTALL.
+#
+# <function>(
+#   <target>
+# )
+#
 FUNCTION(__SET_INTERFACE_TARGET_SOURCES target)
     GET_TARGET_PROPERTY(interface_sources "${target}" CMDEF_INSTALL_INTERFACE_SOURCES)
     IF(interface_sources)

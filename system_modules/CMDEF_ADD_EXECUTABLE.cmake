@@ -59,7 +59,7 @@ FUNCTION(CMDEF_ADD_EXECUTABLE)
 			TARGET
 		P_ARGN ${ARGN}
 	)
-	CMDEF_HELPERS_IS_NAME_VALID(${__TARGET})
+	CMDEF_HELPERS_IS_TARGET_NAME_VALID(${__TARGET})
 	CMUTIL_VERSION_CHECK("${__VERSION}")
 
 	SET(exec_flag)
@@ -106,8 +106,10 @@ ENDFUNCTION()
 # Set <output_var> to TRUE if created by CMDEF_ADD_EXECUTABLE.
 #
 # Usage:
-#	<function>(target_a output_var)
-#	IF(NOT output_var)
+#	<function>(target output_var_name)
+#	IF(DEFINED output_var_name)
+#		MESSAGE(STATUS "Target name: ${output_var_name}")
+#	ELSE()
 #		MESSAGE(STATUS "Not a CMDEF target")
 #	ENDIF()
 #
@@ -117,8 +119,12 @@ ENDFUNCTION()
 # )
 #
 FUNCTION(CMDEF_ADD_EXECUTABLE_CHECK target output_var)
-	GET_PROPERTY(is_cmdef_executable TARGET ${target} PROPERTY CMDEF_EXECUTABLE)
-	SET(${output_var} ${is_cmdef_executable} PARENT_SCOPE)
+	GET_PROPERTY(is_cmdef TARGET ${target} PROPERTY CMDEF_EXECUTABLE)
+	IF(is_cmdef)
+		SET(${output_var} "${target}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	UNSET(${output_var} PARENT_SCOPE)
 ENDFUNCTION()
 
 ## Helper
@@ -126,6 +132,8 @@ ENDFUNCTION()
 # Setting specific only for Windows
 #
 # <function> (
+# 	<target_lib>
+# 	<version>
 # )
 #
 FUNCTION(_CMDEF_ADD_EXECUTABLE_WINDOWS_SETTING target_lib version)

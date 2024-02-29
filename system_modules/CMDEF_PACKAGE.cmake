@@ -1,7 +1,8 @@
 ## Main
 #
 # Create CMake package.
-# Consumes output from CMDEF_ADD_LIBRARY or CMDEF_ADD_EXECUTABLE
+# Package targets created with CMDEF_ADD_LIBRARY or CMDEF_ADD_EXECUTABLE and installed by CMDEF_INSTALL.
+# Provides packaging for other targets too, but with reduced functionality.
 #
 # If the Generator supports multiconf default target PACKAGE
 # is redefined to support multiconfig generators.
@@ -20,7 +21,6 @@ SET(_CMDEF_PACKAGE_CURRENT_DIR "${CMAKE_CURRENT_LIST_DIR}"
 FIND_PACKAGE(CMLIB)
 
 
-
 ##
 # Creates and initialize PACKAGE targets.
 #
@@ -37,13 +37,13 @@ FIND_PACKAGE(CMLIB)
 # (Due to compatibility with multiconfig)
 #
 # If MAIN_TARGET is created and installed by CMDEF,
-# it will check dependencies and include direct, not imported and created by CMDEF in the target package.
+# it will check dependencies and include those directly linked, not imported and created by CMDEF in the target package.
 # These dependencies must be in the same namespace as the MAIN_TARGET.
 # NAMESPACE of the MAIN_TARGET is the same as the MAIN_TARGET's name.
 #
 # [Arguments]
 # MAIN_TARGET is main target (Definition in README.md).
-# Basicaly it represents target which will serve as reference
+# Basically it represents target which will serve as reference
 # against which we create package. It's target from which the meta-information
 # like package name etc is processed.
 # The package is created for all installed resource/targets etc.
@@ -81,13 +81,14 @@ FUNCTION(CMDEF_PACKAGE)
 
 	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_library)
 	CMDEF_ADD_EXECUTABLE_CHECK(${__MAIN_TARGET} cmdef_executable)
-	IF(cmdef_library OR cmdef_executable)
-		_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES(${__MAIN_TARGET} targets_to_include)
+	IF(DEFINED cmdef_library OR DEFINED cmdef_executable)
+		_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES(
+				MAIN_TARGET ${__MAIN_TARGET}
+				OUTPUT_DEPENDENCIES_LIST targets_to_include
+		)
 		LIST(APPEND targets_to_include ${__MAIN_TARGET})
 		_CMDEF_PACKAGE_CHECK_NAMESPACE(${__MAIN_TARGET} "${targets_to_include}")
 	ENDIF()
-
-
 
 	SET(configurations ${CMDEF_BUILD_TYPE_LIST_UPPERCASE})
 	IF(DEFINED __CONFIGURATIONS)
@@ -108,7 +109,7 @@ FUNCTION(CMDEF_PACKAGE)
 	CONFIGURE_PACKAGE_CONFIG_FILE(
 		"${_CMDEF_PACKAGE_CURRENT_DIR}/resources/cmake_package_config.cmake.in"
 		"${package_config_file}"
-		INSTALL_DESTINATION "${CMDEF_TARGET_INSTALL_DIRECTORY}/${__MAIN_TARGET}/"
+		INSTALL_DESTINATION "${CMDEF_LIBRARY_INSTALL_DIR}/cmake/${__MAIN_TARGET}/"
 	)
 
 	WRITE_BASIC_PACKAGE_VERSION_FILE(
@@ -117,7 +118,7 @@ FUNCTION(CMDEF_PACKAGE)
 		COMPATIBILITY SameMajorVersion
 	)
 	INSTALL(FILES "${package_config_file}" "${package_version_file}"
-		DESTINATION "${CMDEF_TARGET_INSTALL_DIRECTORY}/${__MAIN_TARGET}/"
+		DESTINATION "${CMDEF_LIBRARY_INSTALL_DIR}/cmake/${__MAIN_TARGET}/"
 	)
 
 	SET(package_name_suffix)
@@ -152,7 +153,6 @@ FUNCTION(CMDEF_PACKAGE)
 	ENDIF()
 ENDFUNCTION()
 
-
 ##
 # HELPER
 #
@@ -163,65 +163,104 @@ ENDFUNCTION()
 # Function finds all linked libraries of the main_target and then recursively checks their dependencies.
 #
 # [Arguments]
-# main_target - package target, for which we want to check and include dependencies
-# output_dependencies_list - output variable to store dependencies of the main target
+# MAIN_TARGET - package target, for which we want to check and include dependencies
+# OUTPUT_DEPENDENCIES_LIST - output variable to store all installed, cmdef, not-imported dependencies of the main target
 #
-FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES main_target output_dependencies_list)
+# <function>(
+#	MAIN_TARGET              <main_target>
+#	OUTPUT_DEPENDENCIES_LIST <output_dependencies_list> M // list of targets
+# )
+FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES)
+	CMLIB_PARSE_ARGUMENTS(
+		ONE_VALUE
+			MAIN_TARGET
+		MULTI_VALUE
+			OUTPUT_DEPENDENCIES_LIST
+		REQUIRED
+			MAIN_TARGET
+			OUTPUT_DEPENDENCIES_LIST
+		P_ARGN ${ARGN}
+	)
 	SET(dependencies)
-
-	GET_TARGET_PROPERTY(linked_libraries ${main_target} INTERFACE_LINK_LIBRARIES)
-	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libraries}" dependencies)
-
-	# TODO redundant? INTERFACE_LINK_LIBRARIES seems to find everything, but from documentation I didnt understand the function to do so
-	#[[GET_TARGET_PROPERTY(linked_libs ${main_target} LINK_LIBRARIES)
-	_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS("${linked_libs}" target_libs)
-	SET(dependencies ${dependencies} ${target_libs}) ]]
+	GET_TARGET_PROPERTY(linked_libraries ${__MAIN_TARGET} INTERFACE_LINK_LIBRARIES)
+	_CMDEF_PACKAGE_FIND_NOT_IMPORTED_TARGETS(LIBRARIES ${linked_libraries} OUTPUT_TARGETS dependencies)
 
 	FOREACH (dependency IN LISTS dependencies)
-		_CMDEF_PACKAGE_CHECK_DEPENDENCIES("${dependency}" "${dependencies}")
+		_CMDEF_PACKAGE_CHECK_DEPENDENCIES(
+				LIBRARY ${dependency}
+				__ALREADY_LINKED_LIBS ${dependencies}
+		)
 	ENDFOREACH ()
-	_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF(${main_target} "${dependencies}" dependencies_to_include)
+	_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF(
+			DEPENDENCIES ${dependencies}
+			OUTPUT_INSTALLED_CMDEF_TARGETS dependencies_to_include
+	)
 
-	SET(${output_dependencies_list} "${dependencies_to_include}" PARENT_SCOPE)
+	SET(${__OUTPUT_DEPENDENCIES_LIST} "${dependencies_to_include}" PARENT_SCOPE)
 ENDFUNCTION()
 
 ##
 # HELPER
 #
-# Find and append not IMPORTED Cmake TARGETS from input_libraries into output_targets.
+# Find and put all not-IMPORTED Cmake TARGETS from list LIBRARIES into OUTPUT_TARGETS.
 #
 # [Arguments]
-# input_libraries - list of libraries to check
-# output_targets - output variable to store not IMPORTED CMake TARGETS
+# LIBRARIES - list of libraries to check
+# OUTPUT_TARGETS - output variable to store not IMPORTED CMake TARGETS
 #
-FUNCTION(_CMDEF_PACKAGE_APPEND_NOT_IMPORTED_TARGETS input_libraries output_targets)
+# <function>(
+#	LIBRARIES      <linked_libraries> M
+# 	OUTPUT_TARGETS <output_targets> M	// list
+# )
+FUNCTION(_CMDEF_PACKAGE_FIND_NOT_IMPORTED_TARGETS)
+	CMLIB_PARSE_ARGUMENTS(
+		MULTI_VALUE
+			LIBRARIES
+			OUTPUT_TARGETS
+		REQUIRED
+			LIBRARIES
+			OUTPUT_TARGETS
+		P_ARGN ${ARGN}
+	)
 	SET(targets)
 
-	FOREACH (input_library IN LISTS input_libraries)
-		IF (NOT TARGET ${input_library})
+	FOREACH (library IN LISTS __LIBRARIES)
+		IF (NOT TARGET ${library})
 			CONTINUE()
 		ENDIF ()
 
-		GET_TARGET_PROPERTY(imported ${input_library} IMPORTED)
+		GET_TARGET_PROPERTY(imported ${library} IMPORTED)
 		IF (NOT imported)
-			LIST(APPEND targets ${input_library})
+			LIST(APPEND targets ${library})
 		ENDIF ()
 	ENDFOREACH ()
 
-	SET(${output_targets} ${targets} PARENT_SCOPE)
+	SET(${__OUTPUT_TARGETS} ${targets} PARENT_SCOPE)
 ENDFUNCTION()
 
 ##
 # HELPER
+# Used for checking transitive dependencies of the main target.
+# All those dependencies should be IMPORTED or linked directly to the main target.
+# Warns if the LIBRARY is not IMPORTED and is not in __ALREADY_LINKED_LIBS.
 #
-# Warns if the input_library is not IMPORTED and is not in already_included_libs.
+# <function>(
+# 	LIBRARY                <library>
+# 	__ALREADY_LINKED_LIBS  <already_linked_libs> M
+# )
 #
-# [Arguments]
-# input_library - library to check
-# already_included_libs - list of already included libraries
-#
-FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
-	GET_TARGET_PROPERTY(linked_interfaces ${input_library} INTERFACE_LINK_LIBRARIES)
+FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
+	CMLIB_PARSE_ARGUMENTS(
+		ONE_VALUE
+			LIBRARY
+		MULTI_VALUE
+			__ALREADY_LINKED_LIBS
+		REQUIRED
+			LIBRARY
+			__ALREADY_LINKED_LIBS
+		P_ARGN ${ARGN}
+	)
+	GET_TARGET_PROPERTY(linked_interfaces ${__LIBRARY} INTERFACE_LINK_LIBRARIES)
 	IF (NOT linked_interfaces)
 		RETURN()
 	ENDIF ()
@@ -234,7 +273,7 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES input_library already_included_libs)
 		IF (imported)
 			CONTINUE()
 		ENDIF ()
-		IF (NOT "${linked_lib}" IN_LIST already_included_libs)
+		IF (NOT "${linked_lib}" IN_LIST ____ALREADY_LINKED_LIBS)
 			# TODO rewrite for more clarity
 			MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${input_library}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
 		ENDIF ()
@@ -245,12 +284,27 @@ ENDFUNCTION()
 # HELPER
 #
 # Checks if the dependencies are CMDEF targets and if they are installed.
-# If the target is installed, it is added to the output_installed_cmdef_targets.
-# If the target is not installed, the function will fail.
+# If the dependency is installed, it is added to the OUTPUT_INSTALLED_CMDEF_TARGETS.
+# Otherwise the function will fail.
 #
-FUNCTION(_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF target dependencies output_installed_cmdef_targets)
+# If the dependency is installed with option NO_INSTALL_CONFIG, it is not included.
+#
+# <function>(
+# 	OUTPUT_INSTALLED_CMDEF_TARGETS <output_installed_cmdef_targets> M	// list of installed dependencies
+# 	[DEPENDENCIES                   <list_of_dependencies> M]
+# )
+#
+FUNCTION(_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF)
+	CMLIB_PARSE_ARGUMENTS(
+		MULTI_VALUE
+			DEPENDENCIES
+			OUTPUT_INSTALLED_CMDEF_TARGETS
+		REQUIRED
+			OUTPUT_INSTALLED_CMDEF_TARGETS
+		P_ARGN ${ARGN}
+	)
 	SET(dependencies_to_include)
-	FOREACH (target IN LISTS dependencies)
+	FOREACH (target IN LISTS __DEPENDENCIES)
 		CMDEF_ADD_LIBRARY_CHECK(${target} is_cmdef_target)
 		IF(NOT is_cmdef_target)
 			CONTINUE()
@@ -265,17 +319,19 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF target dependen
 			MESSAGE(FATAL_ERROR "Dependency ${target} is not installed")
 		ENDIF ()
 	ENDFOREACH ()
-	SET(${output_installed_cmdef_targets} "${dependencies_to_include}" PARENT_SCOPE)
+	SET(${__OUTPUT_INSTALLED_CMDEF_TARGETS} "${dependencies_to_include}" PARENT_SCOPE)
 ENDFUNCTION()
 
 ##
 # Helper
 #
 # It goes over all direct include targets of the main target and checks namespace
-# If a namespace is defined, they have to be in the same namespace.
-# This namespace is the same as the main target's name. And targets are added to namespace_include_targets.
-# Else if the target has no namespace, it is added to include_targets.
+# The namespaces have to match the main target's name. Throws error if not.
 #
+# <function>(
+# 	<main_target>
+# 	<dependencies>
+# )
 FUNCTION(_CMDEF_PACKAGE_CHECK_NAMESPACE main_target dependencies)
 	FOREACH (dependency IN LISTS dependencies)
 		GET_TARGET_PROPERTY(namespace ${dependency} CMDEF_NAMESPACE)

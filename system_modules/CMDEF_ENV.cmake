@@ -147,6 +147,9 @@ ENDMACRO()
 ## Helper
 # Set naming convention variables
 #
+# <function>(
+# )
+#
 FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
 	SET(CMDEF_ENV_NAME_SEPARATOR "_"
 			CACHE STRING
@@ -348,11 +351,6 @@ MACRO(_CMDEF_ENV_SET_OUTPUT_DIR)
 	SET(CMDEF_TARGET_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>"
 		CACHE PATH
 		"Output directory for CMake targets"
-	)
-
-	SET(CMDEF_TARGET_INSTALL_DIRECTORY "lib/cmake/"
-		CACHE PATH
-		"Install directory for CMake targets"
 	)
 ENDMACRO()
 
