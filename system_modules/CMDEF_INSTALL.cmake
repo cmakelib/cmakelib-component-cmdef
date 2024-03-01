@@ -153,7 +153,10 @@ ENDFUNCTION()
 # in relative path to the BASE_DIR.
 # Otherwise all source files are installed in the root of the CMDEF_SOURCE_INSTALL_DIR
 #
-# <function>()
+# <function>(
+# 	TARGET <target>
+# 	CONFIGURATIONS <configurations> M
+# )
 #
 FUNCTION(_CMDEF_INSTALL_INTERFACE_TARGET)
 	CMLIB_PARSE_ARGUMENTS(
