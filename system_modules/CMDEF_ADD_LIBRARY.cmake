@@ -3,14 +3,11 @@
 # Add library. Maintain install include directories
 #
 
-IF(DEFINED CMDEF_ADD_LIBRARY_MODULE)
-	RETURN()
-ENDIF()
-SET(CMDEF_ADD_LIBRARY_MODULE 1)
+INCLUDE_GUARD(GLOBAL)
 
 SET(_CMDEF_ADD_LIBRARY_CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
-FIND_PACKAGE(CMLIB COMPONENTS CMUTIL)
+FIND_PACKAGE(CMLIB COMPONENTS CMUTIL REQUIRED)
 
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_ENV.cmake)
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
@@ -19,12 +16,12 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 
 
 ##
-# It creates shared or static library.
+# It creates shared, static or interface library.
 #
 # Initialize PREFIX and SUFFIX properties
 #
-# Creates targets <library_group>-object, <library_group>-{static,shared}.
-# (If the TYPE is SHARED then 'shared' otherwise 'static')
+# Creates target <library_group>-{static,shared,interface}.
+# (e.g. If the TYPE is SHARED then 'shared')
 #
 # INCLUDE_DIRECTORIES is directory which will be added as include directory for given targets.
 # generator expressions can be used.
@@ -33,20 +30,26 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 # library. If specified all directories specified by this property will be installed
 # into CMDEF_LIBRARY_INSTALL_DIR at target package.
 # It serve as an INTERFACE include directories for given library against linked target.
+# It is a subset of INCLUDE_DIRECTORIES.
 #
-# SOURCES - all c/cpp/h/hpp files will be added as source to given object target.
+# SOURCES - all c/cpp/h/hpp files will be added as source to given target.
+#
+# SOURCE_BASE_DIRECTORY - INTERFACE library only. Only for installation.
+# It is base directory for all source files.
+# If defined, source files will be installed with relative path from this directory.
+# Else, source files will be installed directly in CMDEF_SOURCE_INSTALL_DIR
 #
 # [Custom properties]
 # CMDEF_LIBRARY - property which mark library as "created by CMDEF_ADD_LIBRARY"
 #
 # <function>(
 #		LIBRARY_GROUP <library_group>
-#		TYPE {SHARED|STATIC}
+#		TYPE {SHARED|STATIC|INTERFACE}
 #		SOURCES <source_files> M
 #		VERSION <version>
 #		[INCLUDE_DIRECTORIES <directories> m]
 #		[INSTALL_INCLUDE_DIRECTORIES <install_include_dirs> M]
-#		[SOURCE_DIRECTORIES <source_directories> M]
+#		[SOURCE_BASE_DIRECTORY <source_directories> M]
 # )
 #
 FUNCTION(CMDEF_ADD_LIBRARY)
@@ -59,12 +62,13 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 			VERSION SOVERSION
 			LIBRARY_GROUP
 			TYPE
+			SOURCE_BASE_DIRECTORY
 		REQUIRED
 			VERSION
 			LIBRARY_GROUP
 		P_ARGN ${ARGN}
 	)
-
+	CMDEF_HELPER_IS_TARGET_NAME_VALID(${__LIBRARY_GROUP})
 	CMUTIL_VERSION_CHECK(${__VERSION})
 	_CMDEF_ADD_LIBRARY_CHECK_TYPE(${__TYPE})
 
@@ -72,61 +76,59 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 		MESSAGE(FATAL_ERROR "Target '${__LIBRARY_GROUP}' already exist!")
 	ENDIF()
 
-	SET(target_object_lib ${__LIBRARY_GROUP}-object)
-	IF(NOT TARGET ${target_object_lib})
+	STRING(TOLOWER "${__TYPE}" target_lib_type_suffix)
+	SET(target_lib "${__LIBRARY_GROUP}-${target_lib_type_suffix}")
+
+	ADD_LIBRARY(${target_lib} "${__TYPE}")
+	IF(__TYPE STREQUAL "INTERFACE")
+		_CMDEF_ADD_LIBRARY_SET_INTERFACE_SOURCES(TARGET ${target_lib}
+			BASE_DIR "${__SOURCE_BASE_DIRECTORY}"
+			SOURCES ${__SOURCES}
+		)
+	ELSE()
+		IF(DEFINED __SOURCE_BASE_DIRECTORY)
+			MESSAGE(FATAL_ERROR "SOURCE_BASE_DIRECTORY is not supported for non INTERFACE library")
+		ENDIF()
 		IF(NOT DEFINED __SOURCES)
 			MESSAGE(FATAL_ERROR "SOURCES is not defined.")
 		ENDIF()
-		ADD_LIBRARY(${target_object_lib} OBJECT ${__SOURCES})
-		IF(DEFINED __INCLUDE_DIRECTORIES)
-			TARGET_INCLUDE_DIRECTORIES(${target_object_lib} PUBLIC ${__INCLUDE_DIRECTORIES})
-		ENDIF()
-		SET_TARGET_PROPERTIES(${target_object_lib}
-			PROPERTIES
-				FOLDER "${CMDEF_MULTICONF_FOLDER_NAME}/object_libraries"
-		)
+		TARGET_SOURCES(${target_lib} PRIVATE ${__SOURCES})
 	ENDIF()
 
-	IF("${__TYPE}" STREQUAL "SHARED")
-		SET(target_lib_suffix shared)
-		SET_PROPERTY(TARGET ${target_object_lib} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
-	ELSEIF("${__TYPE}" STREQUAL "STATIC")
-		SET(target_lib_suffix static)
-	ELSE()
-		MESSAGE(FATAL_ERROR "Invalid library type '${__TYPE}'")
+	IF(__TYPE STREQUAL "SHARED")
+		SET_PROPERTY(TARGET ${target_lib} PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 	ENDIF()
-	SET(target_lib "${__LIBRARY_GROUP}-${target_lib_suffix}")
 
-	ADD_LIBRARY(${target_lib} "${__TYPE}" $<TARGET_OBJECTS:${target_object_lib}>)
 	IF(DEFINED __INCLUDE_DIRECTORIES)
-		TARGET_INCLUDE_DIRECTORIES(${target_object_lib} PUBLIC $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
-		TARGET_INCLUDE_DIRECTORIES(${target_lib}        PUBLIC $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
-	ENDIF()
+		IF(__TYPE STREQUAL "INTERFACE")
+			TARGET_INCLUDE_DIRECTORIES(${target_lib} INTERFACE $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
+		ELSE ()
+			TARGET_INCLUDE_DIRECTORIES(${target_lib} PUBLIC $<BUILD_INTERFACE:${__INCLUDE_DIRECTORIES}>)
+		ENDIF ()
+	ENDIF ()
+
 	IF(DEFINED __INSTALL_INCLUDE_DIRECTORIES)
-		TARGET_INCLUDE_DIRECTORIES(${target_lib} INTERFACE $<INSTALL_INTERFACE:${__INSTALL_INCLUDE_DIRECTORIES}>)
 		SET_PROPERTY(TARGET ${target_lib}
 			PROPERTY
 				CMDEF_INSTALL_INCLUDE_DIRECTORIES ${__INSTALL_INCLUDE_DIRECTORIES}
 		)
 	ENDIF()
 
-	SET(libname_suffix)
-	IF(DEFINED CMDEF_LIBRARY_NAME_FLAG_${__TYPE})
-		SET(libname_suffix "${CMDEF_LIBRARY_NAME_FLAG_${__TYPE}}")
-	ENDIF()
-
 	SET(output_name)
 	IF(DEFINED CMAKE_BUILD_TYPE)
 		IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-			SET(output_name "${CMDEF_LIBRARY_PREFIX}${__LIBRARY_GROUP}${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}${libname_suffix}")
+			SET(output_name "${CMDEF_LIBRARY_PREFIX}${target_lib}${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}")
 		ELSE()
-			SET(output_name "${CMDEF_LIBRARY_PREFIX}${__LIBRARY_GROUP}${libname_suffix}")
+			SET(output_name "${CMDEF_LIBRARY_PREFIX}${target_lib}")
 		ENDIF()
 	ELSE()
-		SET(output_name "${CMDEF_LIBRARY_PREFIX}${__LIBRARY_GROUP}$<$<CONFIG:DEBUG>:${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}>${libname_suffix}")
+		SET(output_name "${CMDEF_LIBRARY_PREFIX}${target_lib}$<$<CONFIG:DEBUG>:${CMDEF_LIBRARY_NAME_DEBUG_SUFFIX}>")
 	ENDIF()
 
-	_CMDEF_ADD_LIBRARY_GET_SUFFIX(suffix ${__TYPE})
+	SET(suffix)
+	IF(NOT __TYPE STREQUAL "INTERFACE")
+		_CMDEF_ADD_LIBRARY_GET_SUFFIX(suffix ${__TYPE})
+	ENDIF()
 	SET_TARGET_PROPERTIES(${target_lib}
 		PROPERTIES
 			SUFFIX "${suffix}"
@@ -136,7 +138,7 @@ FUNCTION(CMDEF_ADD_LIBRARY)
 
 	IF(DEFINED __SOVERSION AND CMDEF_OS_POSIX)
 		IF(__SOVERSION VERSION_GREATER __VERSION)
-			MESSAGE(FATAL_ERROR "SOVERSION (${__SOVERSION}) is not  <= VERSION (${__VERSION})")
+			MESSAGE(FATAL_ERROR "SOVERSION (${__SOVERSION}) is not <= VERSION (${__VERSION})")
 		ENDIF()
 		SET_PROPERTY(TARGET ${target_lib} PROPERTY SOVERSION ${__SOVERSION})
 	ENDIF()
@@ -168,12 +170,12 @@ ENDFUNCTION()
 #
 # <function>(
 #	<target>
-#	<output_var>
+#	<output_var>	// UNSET if not created by CMDEF_ADD_LIBRARY, else set to name of the target
 # )
 #
 FUNCTION(CMDEF_ADD_LIBRARY_CHECK target output_var)
 	GET_PROPERTY(is_cmdef TARGET ${target} PROPERTY CMDEF_LIBRARY)
-	IF(NOT is_cmdef STREQUAL "NOTFOUND")
+	IF(is_cmdef)
 		SET(${output_var} "${target}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
@@ -184,9 +186,73 @@ ENDFUNCTION()
 
 ## Helper
 #
+# Set BUILD_INTERFACE sources for INTERFACE library
+#
+# <function>(
+# 	TARGET <target>
+# 	[BASE_DIR <base_dir>]
+# 	[SOURCES <sources> M]
+# )
+FUNCTION(_CMDEF_ADD_LIBRARY_SET_INTERFACE_SOURCES)
+	CMLIB_PARSE_ARGUMENTS(
+		MULTI_VALUE
+			SOURCES
+		ONE_VALUE
+			TARGET BASE_DIR
+		REQUIRED
+			TARGET
+		P_ARGN ${ARGN}
+	)
+
+	IF(NOT __SOURCES)
+		RETURN()
+	ENDIF()
+
+	SET(all_sources)
+	FOREACH(source IN LISTS __SOURCES)
+		SET(result_source)
+		CMAKE_PATH(NORMAL_PATH source OUTPUT_VARIABLE source_normalized)
+		CMAKE_PATH(IS_RELATIVE source_normalized is_relative)
+		CMAKE_PATH(IS_ABSOLUTE source_normalized is_absolute)
+		IF(is_absolute)
+			SET(result_source ${source_normalized})
+		ELSEIF(is_relative)
+			CMAKE_PATH(APPEND CMAKE_CURRENT_LIST_DIR "${source_normalized}" OUTPUT_VARIABLE result_source)
+		ELSE()
+			MESSAGE(FATAL_ERROR "Error - the file is has not a valid path: ${source_normalized}")
+		ENDIF()
+		LIST(APPEND all_sources "${result_source}")
+	ENDFOREACH()
+
+	SET(base_dir)
+	IF(__BASE_DIR)
+		CMAKE_PATH(IS_RELATIVE __BASE_DIR base_dir_is_relative)
+		IF(base_dir_is_relative)
+			CMAKE_PATH(APPEND CMAKE_CURRENT_LIST_DIR "${__BASE_DIR}" OUTPUT_VARIABLE base_dir)
+		ENDIF()
+	ENDIF()
+	LIST(REMOVE_DUPLICATES all_sources)
+
+	FOREACH(final_source_path IN LISTS all_sources)
+		TARGET_SOURCES(${__TARGET} INTERFACE $<BUILD_INTERFACE:${final_source_path}>)
+	ENDFOREACH()
+
+	SET_TARGET_PROPERTIES(${__TARGET}
+		PROPERTIES
+			CMDEF_LIBRARY_SOURCES "${all_sources}"
+			CMDEF_LIBRARY_BASE_DIR "${base_dir}"
+	)
+ENDFUNCTION()
+
+
+
+## Helper
+#
 # Setting specific only for Windows
 #
 # <function> (
+# 	<target_lib>
+# 	<version>
 # )
 #
 FUNCTION(_CMDEF_ADD_LIBRARY_WINDOWS_SETTING target_lib version)
@@ -215,7 +281,7 @@ ENDFUNCTION()
 
 
 ## Helper
-# Get library suffix according to build type
+# Get library suffix according to build type and host OS
 #
 # <function>(
 #		<type> // build type - uppercase
@@ -233,14 +299,14 @@ ENDFUNCTION()
 
 ## Helper
 #
-# Check if the 'type' is STATIC or SHARED
+# Check if the 'type' is STATIC, SHARED or INTERFACE
 #
 # <function>(
 #		<library_type>
 # )
 #
 FUNCTION(_CMDEF_ADD_LIBRARY_CHECK_TYPE type)
-	SET(available_types "STATIC" "SHARED")
+	SET(available_types "STATIC" "SHARED" "INTERFACE")
 	LIST(FIND available_types "${type}" type_found)
 	IF(type_found EQUAL -1)
 		MESSAGE(FATAL_ERROR "Invalid Type '${type}'")

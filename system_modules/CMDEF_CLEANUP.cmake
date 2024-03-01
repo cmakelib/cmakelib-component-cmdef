@@ -3,10 +3,7 @@
 # Cleanup compile and link options
 #
 
-IF(DEFINED CMDEF_CLEANUP_MODULE)
-	RETURN()
-ENDIF()
-SET(CMDEF_CLEANUP_MODULE 1)
+INCLUDE_GUARD(GLOBAL)
 
 
 

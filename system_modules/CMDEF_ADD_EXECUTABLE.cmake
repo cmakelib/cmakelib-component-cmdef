@@ -3,13 +3,11 @@
 # Add executable
 #
 
-IF(DEFINED CMDEF_ADD_EXECUTABLE)
-	RETURN()
-ENDIF()
+INCLUDE_GUARD(GLOBAL)
 
 SET(_CMDEF_ADD_EXECUTABLE_CURRENT_LIST_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
-FIND_PACKAGE(CMLIB COMPONENTS CMUTIL)
+FIND_PACKAGE(CMLIB COMPONENTS CMUTIL REQUIRED)
 
 INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 
@@ -17,6 +15,8 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 
 ##
 # Add executable.
+#
+# SOURCES - all c/cpp/h/hpp files will be added as source to given target.
 #
 # WIN32 - create WIN32 application.
 # Ignored if the CMDEF_OS_WINDOWS is false
@@ -26,7 +26,10 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 #
 # OUTPUT_NAME - output base name. Name of the target
 # file after compile and link.
-# 
+#
+# [Custom properties]
+# CMDEF_EXECUTABLE - property which mark library as "created by CMDEF_ADD_EXECUTABLE"
+#
 # <function>(
 #		TARGET  <target>
 #		SOURCES <sources> M
@@ -54,7 +57,7 @@ FUNCTION(CMDEF_ADD_EXECUTABLE)
 			TARGET
 		P_ARGN ${ARGN}
 	)
-
+	CMDEF_HELPER_IS_TARGET_NAME_VALID(${__TARGET})
 	CMUTIL_VERSION_CHECK("${__VERSION}")
 
 	SET(exec_flag)
@@ -82,6 +85,7 @@ FUNCTION(CMDEF_ADD_EXECUTABLE)
 	SET_TARGET_PROPERTIES(${__TARGET}
 		PROPERTIES
 			OUTPUT_NAME "${output_name}${package_name_suffix}"
+			CMDEF_EXECUTABLE TRUE
 	)
 
 	IF(DEFINED __INCLUDE_DIRECTORIES)
@@ -95,11 +99,43 @@ ENDFUNCTION()
 
 
 
+##
+# Check if the target is created by CMDEF_ADD_EXECUTABLE
+# function.
+#
+# Set <output_var> to TRUE if created by CMDEF_ADD_EXECUTABLE.
+#
+# Usage:
+#	<function>(target output_var_name)
+#	IF(DEFINED output_var_name)
+#		MESSAGE(STATUS "Target name: ${output_var_name}")
+#	ELSE()
+#		MESSAGE(STATUS "Not a CMDEF target")
+#	ENDIF()
+#
+# <function>(
+#	<target>
+#	<output_var>	# UNSET if not created by CMDEF_ADD_EXECUTABLE, else set to target name
+# )
+#
+FUNCTION(CMDEF_ADD_EXECUTABLE_CHECK target output_var)
+	GET_PROPERTY(is_cmdef TARGET ${target} PROPERTY CMDEF_EXECUTABLE)
+	IF(is_cmdef)
+		SET(${output_var} "${target}" PARENT_SCOPE)
+		RETURN()
+	ENDIF()
+	UNSET(${output_var} PARENT_SCOPE)
+ENDFUNCTION()
+
+
+
 ## Helper
 #
 # Setting specific only for Windows
 #
 # <function> (
+# 	<target_lib>
+# 	<version>
 # )
 #
 FUNCTION(_CMDEF_ADD_EXECUTABLE_WINDOWS_SETTING target_lib version)

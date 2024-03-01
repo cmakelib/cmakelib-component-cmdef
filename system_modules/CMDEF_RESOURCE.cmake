@@ -3,12 +3,9 @@
 # Manage resources for binaries. Specialy for Windows.
 #
 
-IF(DEFINED CMDEF_RESOURCE_MODULE)
-	RETURN()
-ENDIF()
-SET(CMDEF_RESOURCE_MODULE 1)
+INCLUDE_GUARD(GLOBAL)
 
-FIND_PACKAGE(CMLIB)
+FIND_PACKAGE(CMLIB REQUIRED)
 
 
 
@@ -79,7 +76,7 @@ FUNCTION(CMDEF_RESOURCE_WINDOWS)
 	ENDIF()
 
 	GET_SOURCE_FILE_PROPERTY(file_definitions "${target_resource_dir}/${target_resource_filename}" COMPILE_DEFINITIONS)
-	IF(file_definitions STREQUAL "NOTFOUND")
+	IF(NOT file_definitions)
 		SET(file_definitions)
 	ENDIF()
 

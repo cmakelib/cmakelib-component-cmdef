@@ -7,12 +7,9 @@
 # - CMAKE_CURRENT_BINARY_DIR (defined as "${CMAKE_CURRENT_LIST_DIR}" for script mode)
 #
 
-IF(DEFINED CMDEF_ENV_MODULE)
-	RETURN()
-ENDIF()
-SET(CMDEF_ENV_MODULE 1)
+INCLUDE_GUARD(GLOBAL)
 
-FIND_PACKAGE(CMLIB)
+FIND_PACKAGE(CMLIB REQUIRED)
 
 #
 # Variable that is defined only as local.
@@ -39,7 +36,7 @@ FUNCTION(CMDEF_ENV_INIT)
 	_CMDEF_ENV_SET_OUTPUT_DIR()
 	_CMDEF_ENV_SET_TARGET_INSTALL_DIR()
 	_CMDEF_ENV_SET_DESCRIPTION()
-
+	_CMDEF_ENV_SET_NAMING_CONVENTION()
 	_CMDEF_ENV_SET_SUPPORTED_LANG()
 
 	IF(CMDEF_OS_WINDOWS)
@@ -147,17 +144,56 @@ ENDMACRO()
 
 
 ## Helper
+# Set naming convention variables
+#
+# <function>(
+# )
+#
+FUNCTION(_CMDEF_ENV_SET_NAMING_CONVENTION)
+	SET(CMDEF_ENV_NAME_SEPARATOR "_"
+			CACHE STRING
+			"Separator for package name"
+	)
+	SET(CMDEF_ENV_NAMESPACE_SUFFIX "::"
+			CACHE STRING
+			"Suffix for namespace"
+	)
+ENDFUNCTION()
+
+
+
+## Helper
 # Set and control list of supported languages
 # 
 # <function> (
 # )
 #
-MACRO(_CMDEF_ENV_SET_SUPPORTED_LANG)
+FUNCTION(_CMDEF_ENV_SET_SUPPORTED_LANG)
 	SET(CMDEF_SUPPORTED_LANG_LIST C;CXX;OBJC;OBJCXX;RC;
 		CACHE STRING
 		"Supported programming languages"
 	)
-ENDMACRO()
+	SET(CMDEF_LANG_CXX_SOURCE_FILE_EXTENSIONS .cpp .cc .cxx .hpp
+		CACHE STRING
+		"List of C++ source file extensions"
+	)
+	SET(CMDEF_LANG_C_SOURCE_FILE_EXTENSIONS .c .h
+		CACHE STRING
+		"List of C source file extensions"
+	)
+	SET(CMDEF_LANG_OBJC_SOURCE_FILE_EXTENSIONS .m .h
+		CACHE STRING
+		"List of OBJC source file extensions"
+	)
+	SET(CMDEF_LANG_OBJCXX_SOURCE_FILE_EXTENSIONS .mm
+		CACHE STRING
+		"List of OBJCXX source file extensions"
+	)
+	SET(CMDEF_LANG_RC_SOURCE_FILE_EXTENSIONS .rc
+		CACHE STRING
+		"List of RC source file extensions"
+	)
+ENDFUNCTION()
 
 
 
@@ -315,6 +351,10 @@ MACRO(_CMDEF_ENV_SET_TARGET_INSTALL_DIR)
 	SET(CMDEF_INCLUDE_INSTALL_DIR "include/"
 		CACHE PATH
 		"Name of include directory after install (in package)"
+	)
+	SET(CMDEF_SOURCE_INSTALL_DIR "source/"
+		CACHE PATH
+		"Name of source directory after install (in package)"
 	)
 	SET(CMDEF_LIBRARY_INSTALL_DIR "lib/"
 		CACHE PATH
@@ -478,6 +518,5 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 	ENDIF()
 	MESSAGE(FATAL_ERROR "Cannot get distro id for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
-
 
 CMDEF_ENV_INIT()
