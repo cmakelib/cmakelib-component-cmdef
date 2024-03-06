@@ -1,7 +1,7 @@
 
 # CMDEf cache variables
 
-Each section represetn one Cache variable used in CMDEF.
+Each section represent one Cache variable used in CMDEF.
 
 Each variable can be set from cmd line by -D option of the `cmake` utility if not explicitly forbidden.
 
