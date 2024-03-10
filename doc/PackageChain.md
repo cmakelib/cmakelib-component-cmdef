@@ -6,6 +6,14 @@ Each function from this chain is independent and can be used separately,
 but using the whole chain provides increased functionality, i.e. checking all dependencies for consistency, 
 checking and including all linked CMDEF targets to the package.
 
+The chain is represented by a CMDEF functions called in following oreder
+
+- CMDEF_ADD_{EXECUTABLE|LIBRARY} - defines CMake target. Lets call the target as a TARGET
+- CMDEF_INSTALL - installs target TARGET
+- CMDEF_PACKAGE - creates package. It needs to be called exactly once per project as part of the upper most CMakeLists.
+
+When the chain is called it provides consistent package generation.
+
 ## Function description
 
 ### CMDEF_ADD_LIBRARY
@@ -34,9 +42,9 @@ Adds an executable, links its sources and headers.
 
 ```cmake
 CMDEF_ADD_EXECUTABLE(
-	TARGET myexecutable
-	SOURCES main.cpp
-	VERSION 1.0.0
+    TARGET myexecutable
+    SOURCES main.cpp
+    VERSION 1.0.0
 )
 ```
 
@@ -66,14 +74,13 @@ The generated files are needed for finding the package using `FIND_PACKAGE` comm
 
 ```cmake
 CMDEF_PACKAGE(
-	MAIN_TARGET mylib-shared
-	VERSION "1.0.0"
+    MAIN_TARGET mylib-shared
+    VERSION "1.0.0"
 )
 
 SET(CPACK_GENERATOR ZIP) # This can be any generator
 INCLUDE(CPack)
 ```
-
 
 ## Package usage
 
