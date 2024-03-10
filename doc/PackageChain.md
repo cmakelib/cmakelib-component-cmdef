@@ -8,11 +8,9 @@ checking and including all linked CMDEF targets to the package.
 
 The chain is represented by a CMDEF functions called in following oreder
 
-- CMDEF_ADD_{EXECUTABLE|LIBRARY} - defines CMake target. Lets call the target as a TARGET
-- CMDEF_INSTALL - installs target TARGET
+- CMDEF_ADD_{EXECUTABLE|LIBRARY} - defines CMake target. Lets call the target as a TARGET.
+- CMDEF_INSTALL - installs target TARGET.
 - CMDEF_PACKAGE - creates package. It needs to be called exactly once per project as part of the upper most CMakeLists.
-
-When the chain is called it provides consistent package generation.
 
 ## Function description
 
@@ -84,7 +82,7 @@ INCLUDE(CPack)
 
 ## Package usage
 
-#### Example
+### Example
 
 For this example, we will use all previous snippets and add the following to also install myexecutable.
 
@@ -129,7 +127,7 @@ The created package have the following structure:
 
 ### Using the package in different project
 
-Now the package can be used in other projects. 
+Now the package can be used in other projects.
 
 Add the following lines to the `CMakeLists.txt` file:
 
