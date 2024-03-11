@@ -1,28 +1,28 @@
 # CMDef package chain
 
-CMdef provides chain of functions, that lead to consistent, standardized installing and packaging.
+CMdef provides a chain of functions that leads to consistent, standardized installation and packaging.
 
-Each function from this chain is independent and can be used separately, 
-but using the whole chain provides increased functionality, i.e. checking all dependencies for consistency, 
+Each function from the chain is independent and can be used separately,
+but using the whole chain provides increased functionality, i.e. checking all dependencies for consistency,
 checking and including all linked CMDEF targets to the package.
 
-The chain is represented by a CMDEF functions called in following oreder
+The chain is represented by CMDEF functions called in the following order
 
-- CMDEF_ADD_{EXECUTABLE|LIBRARY} - defines CMake target. Lets call the target as a TARGET.
+- CMDEF_ADD_{EXECUTABLE|LIBRARY} - defines CMake target. Let's call the target a TARGET.
 - CMDEF_INSTALL - installs target TARGET.
-- CMDEF_PACKAGE - creates package. It needs to be called exactly once per project as part of the upper most CMakeLists.
+- CMDEF_PACKAGE - creates a package. It needs to be called exactly once per project as part of the uppermost CMakeLists.
 
 ## Function description
 
 ### CMDEF_ADD_LIBRARY
 
-Adds a library, links its sources and headers.
-The created library name is defined as `LIBRARY_GROUP` name and `TYPE` suffix.
+It adds a library and links its sources and headers.
+The created library name is defined as the `LIBRARY_GROUP` name and the `TYPE` suffix.
 
 #### Example
 
 ```cmake
-# This will create target mylib-shared
+# This will create a target mylib-shared
 CMDEF_ADD_LIBRARY(
     LIBRARY_GROUP mylib
     TYPE SHARED
@@ -34,7 +34,7 @@ CMDEF_ADD_LIBRARY(
 
 ### CMDEF_ADD_EXECUTABLE
 
-Adds an executable, links its sources and headers.
+It adds an executable, and links its sources and headers.
 
 #### Example
 
@@ -48,9 +48,10 @@ CMDEF_ADD_EXECUTABLE(
 
 ### CMDEF_INSTALL
 
-Configure the installation of a target, that will export it and create the targets `.cmake` file.
+Configure installation of a target, that will export it and create the target's `.cmake` file.
 
-`NAMESPACE` is **required** when using the whole chain, and it must be **equal** to name of the **main target**.
+`NAMESPACE` is **required** when using the whole chain and it must be **equal** to the name of the **main target**.
+> **main target** - the 'object' for which we create the CMake project. It relates to CMDEF_PACKAGE
 
 #### Example
 
@@ -63,10 +64,10 @@ CMDEF_INSTALL(
 
 ### CMDEF_PACKAGE
 
-Configure packaging of the target. 
-The packaging creates `<target>Config.cmake`, `<target>ConfigVersion.cmake`, `cpack` then puts everything into an archive. 
+Configure the packaging of the target.
+The packaging creates `<target>Config.cmake` and `<target>ConfigVersion.cmake` files. Calling `cpack` then puts everything into an archive.
 
-The generated files are needed for finding the package using `FIND_PACKAGE` command, it includes all installed **CMDEF** targets into the package.
+The generated files are needed for finding the package using `FIND_PACKAGE` command. It includes all installed **CMDEF** targets into the package.
 
 #### Example
 
@@ -84,7 +85,7 @@ INCLUDE(CPack)
 
 ### Example
 
-For this example, we will use all previous snippets and add the following to also install myexecutable.
+For this example, let's use all previous snippets and add the following code to also install myexecutable.
 
 ```cmake
 CMDEF_INSTALL(
@@ -107,27 +108,27 @@ cpack         # Create archive libmylib-shared-dev_1.0.0_<architecture>.zip
 
 > Note that when `CMAKE_BUILD_TYPE=Debug`, the libraries and executables **OUTPUT_NAME** will have a suffix `d` added to them.
 
-The created package have the following structure:
+The created package has the following structure:
 
 ```
 <install_path>
 ├── bin
-│   └── myexecutable
+│   └── myexecutable
 ├── include
-│   ├── mylib_header.h
+│   ├── mylib_header.h
 └── lib
-    ├── cmake
-    │   └── mylib-shared
-    │       ├── mylib-shared.cmake
-    │       ├── mylib-sharedConfig.cmake
-    │       ├── mylib-sharedConfigVersion.cmake
-    │       ├── myexecutable.cmake
-    └── libmylib-shared.so
+    ├── cmake
+    │   └── mylib-shared
+    │       ├── mylib-shared.cmake
+    │       ├── mylib-sharedConfig.cmake
+    │       ├── mylib-sharedConfigVersion.cmake
+    │       ├── myexecutable.cmake
+    └── libmylib-shared.so
 ```
 
 ### Using the package in different project
 
-Now the package can be used in other projects.
+After installation, the package can be used in other projects.
 
 Add the following lines to the `CMakeLists.txt` file:
 
