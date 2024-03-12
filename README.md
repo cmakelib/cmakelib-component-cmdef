@@ -52,7 +52,7 @@ examples can be found at [example] directory
 
 Each entry in list represents one feature for CMake.
 
-Most of functions are just wrappers which enclosures base feature of
+Most of the functions are just wrappers which enclosures base feature of
 CMake.
 
 Detailed documentation for each function can be found at appropriate module.
