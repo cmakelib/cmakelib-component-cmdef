@@ -55,6 +55,9 @@ FUNCTION(CMDEF_INSTALL)
 	ENDIF()
 
 	SET(original_target ${__TARGET})
+	IF(NOT TARGET ${original_target})
+		MESSAGE(FATAL_ERROR "Not a valid CMake target: ${original_target}.")
+	ENDIF()
 
 	SET(namespace)
 	SET(striped_namespace)
