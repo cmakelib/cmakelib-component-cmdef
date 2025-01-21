@@ -76,7 +76,7 @@ CMDEF_COMPILE_DEFINITIONS_TARGET(
 # Install execubtable to predefined directories so the
 # package structure is stable...
 #
-CMDEF_INSTALL(TARGET executable)
+CMDEF_INSTALL(TARGET executable NAMESPACE executable::)
 CMDEF_INSTALL(TARGET cmake_executable)
 
 #

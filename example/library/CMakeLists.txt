@@ -48,7 +48,7 @@ CMDEF_ADD_LIBRARY(
 # and make the compile option public
 #
 CMDEF_COMPILE_OPTIONS_TARGET(
-	TARGET testlib-object
+	TARGET testlib-shared
 	VISIBLITY PUBLIC
 	DEBUG -Wall
 )
@@ -58,6 +58,7 @@ CMDEF_COMPILE_OPTIONS_TARGET(
 #
 CMDEF_INSTALL(
 	TARGET testlib-shared
+	NAMESPACE testlib-shared::
 	CONFIGURATIONS Debug
 )
 

@@ -1,6 +1,6 @@
 ##
 #
-# create shared library and package with header files
+# Example creates shared library and package with header files
 #
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.18)
@@ -12,6 +12,7 @@ SET(CMAKE_INSTALL_RPATH $ORIGIN/../lib/)
 # Use CMDEF library with defaults preset
 #
 FIND_PACKAGE(CMLIB COMPONENTS CMDEF)
+
 
 
 #
@@ -96,6 +97,7 @@ CMDEF_ADD_EXECUTABLE(
 )
 TARGET_LINK_LIBRARIES(testlink-executable PRIVATE testlib-shared)
 CMDEF_INSTALL(TARGET testlink-executable NAMESPACE testlib-shared::)
+
 #
 # Specify -Wall for target 'testlib'
 # and make the compile option public
