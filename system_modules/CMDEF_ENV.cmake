@@ -3,7 +3,6 @@
 # initialize base CMDEF CMake variables.
 #
 # Module relay on some CMake variables like
-# - CMAKE_SIZEOF_VOID_P (not defined for Script mode)
 # - CMAKE_CURRENT_BINARY_DIR (defined as "${CMAKE_CURRENT_LIST_DIR}" for script mode)
 #
 
