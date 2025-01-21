@@ -429,22 +429,21 @@ FUNCTION(_CMDEF_ENV_GET_ARCH arch)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		FIND_PROGRAM(CMDEF_UNAME uname REQUIRED)
-		EXECUTE_PROCESS(COMMAND "${CMDEF_UNAME}" -m
-			OUTPUT_VARIABLE _arch
-			RESULT_VARIABLE result
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-		IF(NOT (result EQUAL 0))
-			MESSAGE(FATAL_ERROR "Cannot determine architecture! Set up CMDEF_ARCHITECTURE manually or repair uname")
-		ENDIF()
+		CMAKE_HOST_SYSTEM_INFORMATION(RESULT _arch QUERY OS_PLATFORM)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _arch_mapped "${_arch}")
 		STRING(TOLOWER "${_arch_mapped}" _arch_normalized)
+		IF(NOT _arch_normalized)
+			MESSAGE(FATAL_ERROR "Cannot determine system architecture."
+				" It seems the system has system arch set to empty or invalid string."
+				" Consult os-release file."
+			)
+		ENDIF()
 		SET(${arch} "${_arch_normalized}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
 	MESSAGE(FATAL_ERROR "Cannot get architecture for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
+
 
 
 ## Helper
@@ -465,17 +464,15 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_ID distro_id)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
-		EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -i -s
-			OUTPUT_VARIABLE _distro_id
-			RESULT_VARIABLE result
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-		IF(NOT (result EQUAL 0))
-			MESSAGE(FATAL_ERROR "Cannot determine distro ID! Set up CMDEF_DISTRO_ID manually or repair lsb_release")
-		ENDIF()
+		CMAKE_HOST_SYSTEM_INFORMATION(RESULT _distro_id QUERY DISTRIB_ID)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _distro_id_mapped "${_distro_id}")
 		STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
+		IF(NOT _distro_id_normalized)
+			MESSAGE(FATAL_ERROR "Cannot determine Distro ID."
+				"It seems the system has Distro ID set to empty or invalid string."
+				" Consult os-release file."
+			)
+		ENDIF()
 		SET(${distro_id} "${_distro_id_normalized}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
@@ -502,17 +499,15 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
-		EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -r -s
-			OUTPUT_VARIABLE _version_id
-			RESULT_VARIABLE result
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-		IF(NOT (result EQUAL 0))
-			MESSAGE(FATAL_ERROR "Cannot determine version ID! Set up CMDEF_DISTRO_VERSION_ID manually or repair lsb_release")
-		ENDIF()
+		CMAKE_HOST_SYSTEM_INFORMATION(RESULT _version_id QUERY DISTRIB_VERSION_ID)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _version_id_mapped "${_version_id}")
 		STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
+		IF(NOT _version_id_normalized)
+			MESSAGE(FATAL "Cannot determine Distro Version ID."
+				" It seems the system has Distro Version ID set to empty or invalid string."
+				" Consult os-release file."
+			)
+		ENDIF()
 		SET(${version_id} "${_version_id_normalized}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
