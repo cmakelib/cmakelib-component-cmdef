@@ -468,7 +468,7 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_ID distro_id)
 		STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
 		IF(NOT _distro_id_normalized)
 			MESSAGE(FATAL_ERROR "Cannot determine Distro ID."
-				"It seems the system has Distro ID set to empty or invalid string."
+				" It seems the system has Distro ID set to empty or invalid string."
 				" Consult os-release file."
 			)
 		ENDIF()
