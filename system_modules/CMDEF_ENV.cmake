@@ -503,7 +503,7 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _version_id_mapped "${_version_id}")
 		STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
 		IF(NOT _version_id_normalized)
-			MESSAGE(FATAL "Cannot determine Distro Version ID."
+			MESSAGE(FATAL_ERROR "Cannot determine Distro Version ID."
 				" It seems the system has Distro Version ID set to empty or invalid string."
 				" Consult os-release file."
 			)
