@@ -280,7 +280,7 @@ MACRO(_CMDEF_ENV_SET_OS)
 		ENDIF()
 		SET(CMDEF_ARCHITECTURE ${arch}
 			CACHE STRING
-			"Achitecture for which we will compile"
+			"Architecture for which we will compile"
 		)
 	ENDIF()
 	MESSAGE(STATUS "Architecture: ${CMDEF_ARCHITECTURE}")
@@ -376,7 +376,7 @@ ENDMACRO()
 #
 FUNCTION(_CMDEF_ENV_SET_WINDOWS_FLAGS)
 	IF(NOT DEFINED CMDEF_OS_WINDOWS)
-		MESSAGE(FATAL_ERROR "Canot determine target OS. Not defined.")
+		MESSAGE(FATAL_ERROR "Cannot determine target OS. Not defined.")
 	ENDIF()
 	IF(NOT CMDEF_OS_WINDOWS)
 		RETURN()
@@ -403,7 +403,7 @@ FUNCTION(_CMDEF_ENV_SET_DESCRIPTION)
 	)
 	SET(CMDEF_ENV_DESCRIPTION_COPYRIGHT "${CMDEF_ENV_DESCRIPTION_COMPANY_NAME}"
 		CACHE STRING
-		"Copyrigth which will be added to binaries"
+		"Copyright which will be added to binaries"
 	)
 ENDFUNCTION()
 
