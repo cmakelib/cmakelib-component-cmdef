@@ -35,9 +35,9 @@ INCLUDE(${CMAKE_CURRENT_LIST_DIR}/CMDEF_RESOURCE.cmake)
 # SOURCES - all c/cpp/h/hpp files will be added as source to given target.
 #
 # SOURCE_BASE_DIRECTORY - INTERFACE library only. Only for installation.
-# It is base directory for all source files.
-# If defined, source files will be installed with relative path from this directory.
-# Else, source files will be installed directly in CMDEF_SOURCE_INSTALL_DIR
+# It is base directory for all source files. 
+# If defined, source files specified by SOURCES will be installed with relative path respective to SOURCE_BASE_DIRECTORY.
+# Else, source files specified by SOURCES will be installed directly into CMDEF_SOURCE_INSTALL_DIR.
 #
 # [Custom properties]
 # CMDEF_LIBRARY - property which mark library as "created by CMDEF_ADD_LIBRARY"

@@ -1,0 +1,18 @@
+## Main
+#
+# Test warning when target name contains separator
+#
+
+CMAKE_MINIMUM_REQUIRED(VERSION 3.18)
+PROJECT(CMDEF_ADD_EXECUTABLE_INVALID_NAME_WARNING_TEST)
+
+FIND_PACKAGE(CMLIB REQUIRED)
+
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../../CMDEFConfig.cmake")
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../shared_sources/shared_sources.cmake")
+
+CMDEF_ADD_EXECUTABLE(
+    TARGET "test${CMDEF_ENV_NAME_SEPARATOR}invalid"
+    SOURCES "${MAIN_SOURCE_FILE}"
+    VERSION 1.0.0
+)

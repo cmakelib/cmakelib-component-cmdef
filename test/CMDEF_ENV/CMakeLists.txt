@@ -1,0 +1,26 @@
+## Main
+#
+# Tests for CMDEF_ENV module
+#
+
+CMAKE_MINIMUM_REQUIRED(VERSION 3.18)
+PROJECT(CMDEF_ENV_TEST)
+
+FIND_PACKAGE(CMLIB REQUIRED)
+
+INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../TEST.cmake")
+
+TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/basic_init")
+TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/os_detection")
+TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/arch_detection")
+TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/cache_variables_validation")
+
+IF(WIN32)
+	TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/windows_specific")
+ELSEIF(APPLE)
+	TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/macos_specific")
+ELSEIF(UNIX)
+	MESSAGE(STATUS "No Linux-specific tests available")
+ELSE()
+	MESSAGE(FATAL_ERROR "Unknown OS, cannot run OS-specific tests")
+ENDIF() 

@@ -1,5 +1,7 @@
 
-# CMake-lib Basedef component
+# CMake-lib Definition Framework Component
+
+CMDEF aka **CMake-lib Definition Framework**
 
 CMake-lib provides consistent setting for built environment.
 It simplifies and maintains built option, libraries and executables.
@@ -13,32 +15,31 @@ It simplifies and maintains built option, libraries and executables.
 The library is not mainly intended for extending CMake functionality.
 
 It's set of wrappers and helpers which enables easily use of existing CMake
-features.
+features in a more standardised manner akross multiple project.
 
 ### Definition of Main target
 
 Each CMake project has one main target - the target for which the project is
 created, compiled, ...
 
-For example we have CMake project for building chrome browser.
-Browser is represented by one executable called `chrome`. That executable
+For example - CMake project for building chrome browser.
+Browser is represented by the executable called `chrome`. The executable
 must have own target in CMake project.
 
 By that target other project properties are referenced - installer name, application name, documentation etc.
-We call this type of target as 'main target' (the 'object' for which we
-create the CMake project)
+This type of target is called 'main target' (the 'object' for which the CMake project is created).
 
-In the library the 'main target' is represented by MAIN_TARGET variable/parameter for macros/functions
+The library 'main target' is represented by LIBRARY_GROUP argument wift suffix added according to a library type created.
 
 ## Usage
 
-Let GIT_URI be a GIT URI of this repository.
-
+```cmake
 	FIND_PACKAGE(CMLIB COMPONENTS CMDEF)
+```
 
 ### Set build defaults
 
-CMake-lib sets and maintains build/link flags and global wide definitions
+CMake-lib sets and maintains build and link flags and global wide definitions.
 
 Component workflow
 
