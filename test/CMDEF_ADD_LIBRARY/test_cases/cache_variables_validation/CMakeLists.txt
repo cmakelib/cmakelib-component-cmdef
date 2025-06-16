@@ -43,7 +43,7 @@ FUNCTION(TEST_CACHE_VARIABLES_INTEGRATION)
     ENDIF()
 
     GET_TARGET_PROPERTY(output_name testcachevars-shared OUTPUT_NAME)
-    IF(NOT output_name MATCHES "${CMDEF_LIBRARY_PREFIX}")
+    IF(NOT output_name MATCHES "^${CMDEF_LIBRARY_PREFIX}")
         MESSAGE(FATAL_ERROR "OUTPUT_NAME should start with CMDEF_LIBRARY_PREFIX '${CMDEF_LIBRARY_PREFIX}', got: ${output_name}")
     ENDIF()
 
