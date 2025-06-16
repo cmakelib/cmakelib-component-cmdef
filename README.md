@@ -47,7 +47,7 @@ Component workflow
 - set default build and link options  by `CMDEF_COMPILE_OPTIONS`, `CMDEF_LINK_OPTIONS`
 - set compile definitions by `CMDEF_COMPIE_DEFINITIONS`
 
-examples can be found at [example] directory
+examples can be found at [example] directory.
 
 ## Function list
 
@@ -56,7 +56,7 @@ Each entry in list represents one feature for CMake.
 Most of the functions are just wrappers which enclosures base feature of
 CMake.
 
-Detailed documentation for each function can be found at appropriate module.
+Detailed documentation for each function can be found at the appropriate module.
 
 - [CMDEF_ADD_LIBRARY.cmake]
 - [CMDEF_ADD_EXECUTABLE.cmake]
@@ -68,13 +68,15 @@ Detailed documentation for each function can be found at appropriate module.
 - [CMDEF_LINK_OPTION.cmake]
 - [CMDEF_PACKAGE.cmake]
 
-## Config Variables
+## Documentation
 
-Configuration variables detailed desc. for the library is located at [doc/CacheVariables.md]
+Every function has a comprehensive documentation writtend as part of the functcion definition.
+
+Context documentation is located at [doc/README.md]
 
 ## Coding standards
 
-- We use Uppercase for all keywords and global variables
+- The uppercase letters are used for all keywords and global variables
 - Each helper function must begin with '_'
 
 [CMLIB]: https://github.com/cmakelib/cmakelib
