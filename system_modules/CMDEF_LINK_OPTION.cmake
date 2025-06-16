@@ -84,7 +84,6 @@ ENDFUNCTION()
 # by generator_expression $<<CONFIG:build_type>:${option}>
 #
 # VISIBILITY is passed to visibility section of TARGET_LINK_OPTIONS.
-# If no visibility specified than visibility is omitted
 #
 # <function>(
 #		TARGET <target>
@@ -104,6 +103,7 @@ FUNCTION(CMDEF_LINK_OPTIONS_TARGET)
 			VISIBILITY
 		REQUIRED
 			TARGET 
+			VISIBILITY
 		P_ARGN ${ARGN}
 	)
 
