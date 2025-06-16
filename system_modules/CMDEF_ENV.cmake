@@ -3,7 +3,6 @@
 # initialize base CMDEF CMake variables.
 #
 # Module relay on some CMake variables like
-# - CMAKE_SIZEOF_VOID_P (not defined for Script mode)
 # - CMAKE_CURRENT_BINARY_DIR (defined as "${CMAKE_CURRENT_LIST_DIR}" for script mode)
 #
 
@@ -281,7 +280,7 @@ MACRO(_CMDEF_ENV_SET_OS)
 		ENDIF()
 		SET(CMDEF_ARCHITECTURE ${arch}
 			CACHE STRING
-			"Achitecture for which we will compile"
+			"Architecture for which we will compile"
 		)
 	ENDIF()
 	MESSAGE(STATUS "Architecture: ${CMDEF_ARCHITECTURE}")
@@ -377,7 +376,7 @@ ENDMACRO()
 #
 FUNCTION(_CMDEF_ENV_SET_WINDOWS_FLAGS)
 	IF(NOT DEFINED CMDEF_OS_WINDOWS)
-		MESSAGE(FATAL_ERROR "Canot determine target OS. Not defined.")
+		MESSAGE(FATAL_ERROR "Cannot determine target OS. Not defined.")
 	ENDIF()
 	IF(NOT CMDEF_OS_WINDOWS)
 		RETURN()
@@ -404,7 +403,7 @@ FUNCTION(_CMDEF_ENV_SET_DESCRIPTION)
 	)
 	SET(CMDEF_ENV_DESCRIPTION_COPYRIGHT "${CMDEF_ENV_DESCRIPTION_COMPANY_NAME}"
 		CACHE STRING
-		"Copyrigth which will be added to binaries"
+		"Copyright which will be added to binaries"
 	)
 ENDFUNCTION()
 
@@ -469,7 +468,7 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_ID distro_id)
 		STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
 		IF(NOT _distro_id_normalized)
 			MESSAGE(FATAL_ERROR "Cannot determine Distro ID."
-				"It seems the system has Distro ID set to empty or invalid string."
+				" It seems the system has Distro ID set to empty or invalid string."
 				" Consult os-release file."
 			)
 		ENDIF()
@@ -503,7 +502,7 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _version_id_mapped "${_version_id}")
 		STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
 		IF(NOT _version_id_normalized)
-			MESSAGE(FATAL "Cannot determine Distro Version ID."
+			MESSAGE(FATAL_ERROR "Cannot determine Distro Version ID."
 				" It seems the system has Distro Version ID set to empty or invalid string."
 				" Consult os-release file."
 			)
