@@ -13,45 +13,38 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../../CMDEFConfig.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../shared_sources/shared_sources.cmake")
 
 ##
-# Test Windows resource file generation.
+# Test Windows resource file generation with auto-generated resources.
 #
-# Creates executable on Windows and verifies resource file
-# is generated and added to target sources.
+# Creates executable on Windows and verifies auto-generated resource file
+# is created and added to target sources.
 #
 # <function>()
 #
-FUNCTION(TEST_WINDOWS_RESOURCE_GENERATION)
-    IF(NOT CMDEF_OS_WINDOWS)
-        MESSAGE(STATUS "Skipping resource generation test - not on Windows")
-        RETURN()
-    ENDIF()
-    
+FUNCTION(TEST_WINDOWS_RESOURCE_IN_SOURCES)
+
     CMDEF_ADD_EXECUTABLE(
-        TARGET testresourceexe
-        SOURCES "${MAIN_SOURCE_FILE}"
+        TARGET testresourceautoexe
+        SOURCES 
+            "${MAIN_SOURCE_FILE}"
+            "${TEST_RESOURCE_FILE}"
         VERSION 2.5.1
     )
 
-    GET_TARGET_PROPERTY(target_sources testresourceexe SOURCES)
-    
+    GET_TARGET_PROPERTY(target_sources testresourceautoexe SOURCES)
+
     SET(resource_found FALSE)
     FOREACH(source IN LISTS target_sources)
         IF(source MATCHES ".*\\.rc$")
             SET(resource_found TRUE)
-            MESSAGE(STATUS "Found resource file: ${source}")
-            
-            IF(EXISTS "${source}")
-                MESSAGE(STATUS "Resource file exists on disk")
-            ELSE()
-                MESSAGE(FATAL_ERROR "Resource file does not exist: ${source}")
+            IF(NOT EXISTS "${source}")
+                MESSAGE(FATAL_ERROR "Auto-generated resource file does not exist: ${source}")
             ENDIF()
             BREAK()
         ENDIF()
     ENDFOREACH()
-    
     IF(NOT resource_found)
-        MESSAGE(FATAL_ERROR "No resource file found in target sources")
+        MESSAGE(FATAL_ERROR "No auto-generated resource file found in target sources")
     ENDIF()
 ENDFUNCTION()
 
-TEST_WINDOWS_RESOURCE_GENERATION()
+TEST_WINDOWS_RESOURCE_IN_SOURCES()
