@@ -146,7 +146,7 @@ FUNCTION(TEST_SOVERSION_IGNORED_ON_WINDOWS)
 
     GET_TARGET_PROPERTY(soversion testwindowssoversion-shared SOVERSION)
     IF(soversion)
-        MESSAGE(STATUS "SOVERSION property found but should be ignored on Windows: ${soversion}")
+        MESSAGE(FATAL_ERROR "SOVERSION property found but should be ignored on Windows: ${soversion}")
     ELSE()
         MESSAGE(STATUS "SOVERSION correctly ignored on Windows")
     ENDIF()

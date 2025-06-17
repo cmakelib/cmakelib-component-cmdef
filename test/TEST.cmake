@@ -214,6 +214,18 @@ MACRO(TEST_CHECK_TARGET_LACKS_PROPERTY target property)
 ENDMACRO()
 
 
+##
+# Verify target property has exact expected value.
+#
+# Checks that a target's property matches the expected value exactly using string comparison.
+# This is used for precise property validation in CMDEF tests.
+#
+# <function>(
+#     <target>          // Target name to check
+#     <property>        // Property name to verify
+#     <expected_value>  // Exact value the property should have
+# )
+#
 FUNCTION(TEST_CHECK_TARGET_PROPERTY target property expected_value)
     GET_PROPERTY(actual_value TARGET ${target} PROPERTY ${property})
     IF(NOT actual_value STREQUAL "${expected_value}")
@@ -221,6 +233,18 @@ FUNCTION(TEST_CHECK_TARGET_PROPERTY target property expected_value)
     ENDIF()
 ENDFUNCTION()
 
+##
+# Verify target property contains expected pattern.
+#
+# Checks that a target's property contains the expected pattern using regex matching.
+# This is used for flexible property validation when exact matching is not required.
+#
+# <function>(
+#     <target>          // Target name to check
+#     <property>        // Property name to verify
+#     <expected_value>  // Pattern/regex that the property should contain
+# )
+#
 FUNCTION(TEST_CHECK_TARGET_PROPERTY_CONTAINS target property expected_value)
     GET_PROPERTY(actual_value TARGET ${target} PROPERTY ${property})
     IF(NOT actual_value MATCHES "${expected_value}")
