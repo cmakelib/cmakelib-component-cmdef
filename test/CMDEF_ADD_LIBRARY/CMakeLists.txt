@@ -25,8 +25,7 @@ ENDIF()
 
 IF(CMDEF_OS_POSIX)
     TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/test_cases/posix_specific")
+    TEST_RUN_AND_CHECK_OUTPUT("test_cases/soversion"
+        FATAL_ERROR_MESSAGE "SOVERSION should not be set for static libraries, got: 1.0.0"
+    )
 ENDIF()
-
-TEST_RUN_AND_CHECK_OUTPUT("test_cases/soversion"
-    FATAL_ERROR_MESSAGE "SOVERSION should not be set for static libraries, got: 1.0.0"
-)
