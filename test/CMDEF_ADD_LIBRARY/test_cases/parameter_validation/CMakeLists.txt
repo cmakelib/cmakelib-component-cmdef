@@ -35,6 +35,8 @@ TEST_RUN_AND_CHECK_OUTPUT("missing_sources_non_interface"
     FATAL_ERROR_MESSAGE "SOURCES is not defined."
 )
 
-TEST_RUN_AND_CHECK_OUTPUT("soversion_greater_than_version"
-    FATAL_ERROR_MESSAGE "SOVERSION"
-)
+IF(CMDEF_OS_POSIX)
+    TEST_RUN_AND_CHECK_OUTPUT("soversion_greater_than_version"
+        FATAL_ERROR_MESSAGE "SOVERSION"
+    )
+ENDIF()

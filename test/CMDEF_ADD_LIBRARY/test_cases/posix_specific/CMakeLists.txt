@@ -12,11 +12,6 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../TEST.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../../CMDEFConfig.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../shared_sources/shared_sources.cmake")
 
-IF(NOT CMDEF_OS_POSIX)
-    MESSAGE(STATUS "Skipping POSIX-specific tests - not running on POSIX system")
-    RETURN()
-ENDIF()
-
 
 
 ##
