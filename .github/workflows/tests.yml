@@ -51,3 +51,17 @@ jobs:
             git clone https://github.com/cmakelib/cmakelib.git
             export CMLIB_DIR=$(pwd)/cmakelib
             cd test/ && cmake .
+
+  test_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Run tests
+        run: |
+            git config --global --add safe.directory "$(pwd)"
+            git remote set-url origin "${{ github.server_url }}/${{ github.repository }}"
+            git clone https://github.com/cmakelib/cmakelib.git
+            export CMLIB_DIR=$(pwd)/cmakelib
+            cd test/ && cmake .
