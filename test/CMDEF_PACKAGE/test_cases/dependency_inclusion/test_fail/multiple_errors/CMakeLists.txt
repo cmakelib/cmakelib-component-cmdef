@@ -31,7 +31,6 @@ FUNCTION(TEST_MULTIPLE_DEPENDENCY_ERRORS_FAIL)
 
     CACHE_VAR_FORCE_SET(CMAKE_BUILD_TYPE "Release")
 
-    # Create dependencies with various issues
     CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP installeddep
         TYPE SHARED
@@ -53,7 +52,6 @@ FUNCTION(TEST_MULTIPLE_DEPENDENCY_ERRORS_FAIL)
         SOURCES "${LIBRARY_SOURCE_FILE}"
     )
 
-    # Create main library
     CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP multierror
         TYPE SHARED
@@ -76,21 +74,15 @@ FUNCTION(TEST_MULTIPLE_DEPENDENCY_ERRORS_FAIL)
 
     # Don't install notinstalleddep-shared
 
-    MESSAGE(STATUS "Expected FATAL_ERROR: Multiple dependency errors")
-
     # This should FAIL due to dependency issues
     CMDEF_PACKAGE(
         MAIN_TARGET multierror-shared
         VERSION 1.0.0
     )
 
-    # If we reach here, the test failed to fail
     MESSAGE(FATAL_ERROR "TEST FAILURE: CMDEF_PACKAGE should have failed due to dependency errors")
 
     CACHE_VAR_RESTORE(CMAKE_BUILD_TYPE)
 ENDFUNCTION()
-
-# This test is designed to fail with a specific error message
-# It will be run by TEST_RUN_AND_CHECK_OUTPUT which expects the failure
 
 TEST_MULTIPLE_DEPENDENCY_ERRORS_FAIL()

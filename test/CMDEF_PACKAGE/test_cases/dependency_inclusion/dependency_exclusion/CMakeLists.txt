@@ -122,10 +122,21 @@ FUNCTION(TEST_IMPORTED_TARGET_EXCLUSION)
 
     # Create IMPORTED targets that should be excluded
     ADD_LIBRARY(imported_shared SHARED IMPORTED)
-    SET_TARGET_PROPERTIES(imported_shared PROPERTIES IMPORTED_LOCATION "/fake/path/libshared.so")
+    IF(WIN32)
+        SET_TARGET_PROPERTIES(imported_shared PROPERTIES
+            IMPORTED_LOCATION "/fake/path/shared.dll"
+            IMPORTED_IMPLIB "/fake/path/shared.lib"
+        )
+    ELSE()
+        SET_TARGET_PROPERTIES(imported_shared PROPERTIES IMPORTED_LOCATION "/fake/path/libshared.so")
+    ENDIF()
 
     ADD_LIBRARY(imported_static STATIC IMPORTED)
-    SET_TARGET_PROPERTIES(imported_static PROPERTIES IMPORTED_LOCATION "/fake/path/libstatic.a")
+    IF(WIN32)
+        SET_TARGET_PROPERTIES(imported_static PROPERTIES IMPORTED_LOCATION "/fake/path/static.lib")
+    ELSE()
+        SET_TARGET_PROPERTIES(imported_static PROPERTIES IMPORTED_LOCATION "/fake/path/libstatic.a")
+    ENDIF()
 
     # Link all dependencies
     TARGET_LINK_LIBRARIES(importmain-shared PUBLIC cmdefdep2-shared imported_shared imported_static)
@@ -199,7 +210,14 @@ FUNCTION(TEST_MIXED_EXCLUSION_SCENARIOS)
     # Create targets that should be excluded
     ADD_LIBRARY(excluded_standard SHARED "${LIBRARY_SOURCE_FILE}")
     ADD_LIBRARY(excluded_imported SHARED IMPORTED)
-    SET_TARGET_PROPERTIES(excluded_imported PROPERTIES IMPORTED_LOCATION "/fake/path/lib.so")
+    IF(WIN32)
+        SET_TARGET_PROPERTIES(excluded_imported PROPERTIES
+            IMPORTED_LOCATION "/fake/path/lib.dll"
+            IMPORTED_IMPLIB "/fake/path/lib.lib"
+        )
+    ELSE()
+        SET_TARGET_PROPERTIES(excluded_imported PROPERTIES IMPORTED_LOCATION "/fake/path/lib.so")
+    ENDIF()
 
     # Link all dependencies (mix of included and excluded)
     TARGET_LINK_LIBRARIES(mixedmain-shared PUBLIC 

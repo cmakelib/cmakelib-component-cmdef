@@ -58,13 +58,9 @@ FUNCTION(TEST_NON_INSTALLED_CMDEF_DEPENDENCY_FAIL)
         VERSION 1.0.0
     )
 
-    # If we reach here, the test failed to fail
     MESSAGE(FATAL_ERROR "TEST FAILURE: CMDEF_PACKAGE should have failed due to non-installed dependency")
 
     CACHE_VAR_RESTORE(CMAKE_BUILD_TYPE)
 ENDFUNCTION()
-
-# This test is designed to fail with a specific error message
-# It will be run by TEST_RUN_AND_CHECK_OUTPUT which expects the failure
 
 TEST_NON_INSTALLED_CMDEF_DEPENDENCY_FAIL()

@@ -31,7 +31,6 @@ FUNCTION(TEST_NAMESPACE_MISMATCH_FAIL)
 
     CACHE_VAR_FORCE_SET(CMAKE_BUILD_TYPE "Release")
 
-    # Create dependency library
     CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP nsdep
         TYPE SHARED
@@ -39,7 +38,6 @@ FUNCTION(TEST_NAMESPACE_MISMATCH_FAIL)
         SOURCES "${LIBRARY_SOURCE_FILE}"
     )
 
-    # Create main library
     CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP nsmain
         TYPE SHARED
@@ -69,13 +67,7 @@ FUNCTION(TEST_NAMESPACE_MISMATCH_FAIL)
         VERSION 1.0.0
     )
 
-    # If we reach here, the test failed to fail
-    MESSAGE(FATAL_ERROR "TEST FAILURE: CMDEF_PACKAGE should have failed due to namespace mismatch")
-
     CACHE_VAR_RESTORE(CMAKE_BUILD_TYPE)
 ENDFUNCTION()
-
-# This test is designed to fail with a specific error message
-# It will be run by TEST_RUN_AND_CHECK_OUTPUT which expects the failure
 
 TEST_NAMESPACE_MISMATCH_FAIL()

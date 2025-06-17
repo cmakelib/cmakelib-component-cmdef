@@ -12,11 +12,6 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../TEST.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../../CMDEFConfig.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../shared_sources/shared_sources.cmake")
 
-IF(NOT WIN32)
-    MESSAGE(STATUS "Skipping Windows-specific tests - not running on Windows")
-    RETURN()
-ENDIF()
-
 
 
 ##
