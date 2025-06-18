@@ -39,7 +39,7 @@ FUNCTION(TEST_WIN32_FLAG_BEHAVIOR)
         MESSAGE(FATAL_ERROR "Target type should be EXECUTABLE, got: ${target_type}")
     ENDIF()
 
-    GET_TARGET_PROPERTY(wintype testwin32exe WIN32)
+    GET_TARGET_PROPERTY(wintype testwin32exe WIN32_EXECUTABLE)
     IF(NOT wintype)
         MESSAGE(FATAL_ERROR "WIN32 property should be set, got: ${wintype}")
     ENDIF() 
