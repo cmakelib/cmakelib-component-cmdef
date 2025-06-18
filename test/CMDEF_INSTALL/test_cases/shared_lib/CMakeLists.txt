@@ -14,7 +14,6 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../install_override.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../library_tests.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../shared_sources/shared_sources.cmake")
 INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../install_test_macros.cmake")
-INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../install_test_macros.cmake")
 
 ##
 # Test shared library installation with complete INSTALL command verification.

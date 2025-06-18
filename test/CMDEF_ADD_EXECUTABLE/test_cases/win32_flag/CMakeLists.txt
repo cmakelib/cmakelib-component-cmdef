@@ -38,12 +38,11 @@ FUNCTION(TEST_WIN32_FLAG_BEHAVIOR)
     IF(NOT target_type STREQUAL "EXECUTABLE")
         MESSAGE(FATAL_ERROR "Target type should be EXECUTABLE, got: ${target_type}")
     ENDIF()
-    
-    IF(CMDEF_OS_WINDOWS)
-        MESSAGE(STATUS "WIN32 flag test passed on Windows platform")
-    ELSE()
-        MESSAGE(STATUS "WIN32 flag correctly ignored on non-Windows platform")
-    ENDIF()
+
+    GET_TARGET_PROPERTY(wintype testwin32exe WIN32)
+    IF(NOT wintype)
+        MESSAGE(FATAL_ERROR "WIN32 property should be set, got: ${wintype}")
+    ENDIF() 
 ENDFUNCTION()
 
 TEST_WIN32_FLAG_BEHAVIOR()
