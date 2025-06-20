@@ -17,6 +17,7 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../shared_sources/shared_sources.cmake")
 #
 # Creates executable on Windows and verifies auto-generated resource file
 # is created and added to target sources.
+# Auto generate dreaource file contains version, author and other win32 app meta-information.
 #
 # <function>()
 #

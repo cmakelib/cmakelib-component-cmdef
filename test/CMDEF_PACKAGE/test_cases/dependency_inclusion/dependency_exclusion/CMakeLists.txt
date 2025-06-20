@@ -120,7 +120,6 @@ FUNCTION(TEST_IMPORTED_TARGET_EXCLUSION)
         SOURCES "${LIBRARY_SOURCE_FILE}"
     )
 
-    # Create IMPORTED targets that should be excluded
     ADD_LIBRARY(imported_shared SHARED IMPORTED)
     IF(WIN32)
         SET_TARGET_PROPERTIES(imported_shared PROPERTIES
@@ -138,10 +137,8 @@ FUNCTION(TEST_IMPORTED_TARGET_EXCLUSION)
         SET_TARGET_PROPERTIES(imported_static PROPERTIES IMPORTED_LOCATION "/fake/path/libstatic.a")
     ENDIF()
 
-    # Link all dependencies
     TARGET_LINK_LIBRARIES(importmain-shared PUBLIC cmdefdep2-shared imported_shared imported_static)
 
-    # Install only CMDEF targets
     CMDEF_INSTALL(TARGET cmdefdep2-shared NAMESPACE importmain-shared::)
     CMDEF_INSTALL(TARGET importmain-shared NAMESPACE importmain-shared::)
 
@@ -152,10 +149,8 @@ FUNCTION(TEST_IMPORTED_TARGET_EXCLUSION)
 
     TEST_PACKAGE_EXTENDED_CHECKS("importmain-shared" "4.0.0")
 
-    # Verify only CMDEF targets are included
     TEST_PACKAGE_CONFIG_FILE_CONTAINS("importmain-shared" "__INCLUDE_TARGETS_CONFIGS(\"cmdefdep2-shared;importmain-shared\")")
 
-    # Verify IMPORTED targets are excluded
     SET(config_file "${CMAKE_CURRENT_BINARY_DIR}/importmain-sharedConfig.cmake")
     FILE(READ "${config_file}" config_content)
     STRING(FIND "${config_content}" "imported_shared" imported_shared_found)
@@ -184,7 +179,6 @@ FUNCTION(TEST_MIXED_EXCLUSION_SCENARIOS)
 
     CACHE_VAR_FORCE_SET(CMAKE_BUILD_TYPE "Release")
 
-    # Create CMDEF dependencies that should be included
     CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP included1
         TYPE SHARED
@@ -199,7 +193,6 @@ FUNCTION(TEST_MIXED_EXCLUSION_SCENARIOS)
         SOURCES "${LIBRARY_SOURCE_FILE}"
     )
 
-    # Create main library
     CMDEF_ADD_LIBRARY(
         LIBRARY_GROUP mixedmain
         TYPE SHARED
@@ -207,7 +200,6 @@ FUNCTION(TEST_MIXED_EXCLUSION_SCENARIOS)
         SOURCES "${LIBRARY_SOURCE_FILE}"
     )
 
-    # Create targets that should be excluded
     ADD_LIBRARY(excluded_standard SHARED "${LIBRARY_SOURCE_FILE}")
     ADD_LIBRARY(excluded_imported SHARED IMPORTED)
     IF(WIN32)
@@ -219,7 +211,6 @@ FUNCTION(TEST_MIXED_EXCLUSION_SCENARIOS)
         SET_TARGET_PROPERTIES(excluded_imported PROPERTIES IMPORTED_LOCATION "/fake/path/lib.so")
     ENDIF()
 
-    # Link all dependencies (mix of included and excluded)
     TARGET_LINK_LIBRARIES(mixedmain-shared PUBLIC 
         included1-shared 
         included2-static 
@@ -242,7 +233,6 @@ FUNCTION(TEST_MIXED_EXCLUSION_SCENARIOS)
     # Verify only CMDEF targets are included (sorted alphabetically)
     TEST_PACKAGE_CONFIG_FILE_CONTAINS("mixedmain-shared" "__INCLUDE_TARGETS_CONFIGS(\"included1-shared;included2-static;mixedmain-shared\")")
 
-    # Verify excluded targets are not in the config file
     SET(config_file "${CMAKE_CURRENT_BINARY_DIR}/mixedmain-sharedConfig.cmake")
     FILE(READ "${config_file}" config_content)
     STRING(FIND "${config_content}" "excluded_standard" excluded_standard_found)

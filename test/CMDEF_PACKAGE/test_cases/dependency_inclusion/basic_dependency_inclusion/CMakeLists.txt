@@ -136,14 +136,12 @@ FUNCTION(TEST_MULTIPLE_DEPENDENCIES_WITH_PROPERTIES)
 
     TEST_PACKAGE_CONFIG_FILE_CONTAINS("mainmulti-shared" "__INCLUDE_TARGETS_CONFIGS(\"basicdep1-shared;basicdep2-static;mainmulti-shared\")")
 
-    # Verify all dependencies are properly configured for export
     GET_TARGET_PROPERTY(dep1_install_status basicdep1-shared CMDEF_INSTALL)
     GET_TARGET_PROPERTY(dep2_install_status basicdep2-static CMDEF_INSTALL)
     IF(NOT dep1_install_status OR NOT dep2_install_status)
         MESSAGE(FATAL_ERROR "All dependencies should be marked as installed by CMDEF_INSTALL")
     ENDIF()
 
-    # Verify namespace consistency for all targets
     GET_TARGET_PROPERTY(main_ns mainmulti-shared CMDEF_NAMESPACE)
     GET_TARGET_PROPERTY(dep1_ns basicdep1-shared CMDEF_NAMESPACE)
     GET_TARGET_PROPERTY(dep2_ns basicdep2-static CMDEF_NAMESPACE)

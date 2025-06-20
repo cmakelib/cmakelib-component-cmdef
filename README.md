@@ -1,6 +1,8 @@
 
 # CMake-lib Definition Framework Component
 
+Linux: ![buildbadge_github], Windows: ![buildbadge_github], Mac OS: ![buildbadge_github]
+
 CMDEF aka **CMake-lib Definition Framework**
 
 CMake-lib provides consistent setting for built environment.
@@ -91,4 +93,7 @@ Context documentation is located at [doc/README.md]
 [CMDEF_LINK_OPTION.cmake]: system_modules/CMDEF_LINK_OPTION.cmake
 [CMDEF_PACKAGE.cmake]: system_modules/CMDEF_PACKAGE.cmake
 [doc/CacheVariables.md]: doc/CacheVariables.md
+[doc/README.md]: doc/README.md
 [example]: example/
+
+[buildbadge_github]: https://github.com/cmakelib/cmakelib-component-cmdef/actions/workflows/tests.yml/badge.svg

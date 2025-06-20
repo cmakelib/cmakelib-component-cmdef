@@ -69,7 +69,6 @@ FUNCTION(TEST_MULTIPLE_DEPENDENCY_ERRORS_FAIL)
     CMDEF_INSTALL(TARGET installeddep-shared NAMESPACE multierror-shared::)
     CMDEF_INSTALL(TARGET multierror-shared NAMESPACE multierror-shared::)
 
-    # Install one with wrong namespace
     CMDEF_INSTALL(TARGET wrongnamespacedep-shared NAMESPACE wrong::)
 
     # Don't install notinstalleddep-shared

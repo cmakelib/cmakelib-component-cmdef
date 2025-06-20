@@ -51,7 +51,6 @@ FUNCTION(TEST_NAMESPACE_MISMATCH_FAIL)
     CMDEF_INSTALL(TARGET nsdep-shared NAMESPACE different-namespace::)
     CMDEF_INSTALL(TARGET nsmain-shared NAMESPACE nsmain-shared::)
 
-    # Verify the namespace properties are different for this test
     GET_TARGET_PROPERTY(main_ns nsmain-shared CMDEF_NAMESPACE)
     GET_TARGET_PROPERTY(dep_ns nsdep-shared CMDEF_NAMESPACE)
 
