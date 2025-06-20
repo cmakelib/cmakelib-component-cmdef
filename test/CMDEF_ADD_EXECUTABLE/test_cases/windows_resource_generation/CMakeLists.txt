@@ -26,7 +26,6 @@ FUNCTION(TEST_WINDOWS_RESOURCE_IN_SOURCES)
         TARGET testresourceautoexe
         SOURCES 
             "${MAIN_SOURCE_FILE}"
-            "${TEST_RESOURCE_FILE}"
         VERSION 2.5.1
     )
 
