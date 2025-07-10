@@ -18,20 +18,24 @@ TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/basic_dependency_inclusion")
 TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/dependency_exclusion")
 TEST_RUN("${CMAKE_CURRENT_LIST_DIR}/transitive_dependencies")
 
+TEST_RUN_AND_CHECK_OUTPUT(
+    "${CMAKE_CURRENT_LIST_DIR}/transitive_dependency_warning"
+    WARNING_MESSAGE "transitivedep-shared"
+)
 
 TEST_RUN_AND_CHECK_OUTPUT(
     "${CMAKE_CURRENT_LIST_DIR}/test_fail/non_installed_dependency"
-    "Dependency notinstalled-shared is not installed"
+    FATAL_ERROR_MESSAGE "Dependency notinstalled-shared is not installed"
 )
 
 TEST_RUN_AND_CHECK_OUTPUT(
     "${CMAKE_CURRENT_LIST_DIR}/test_fail/namespace_mismatch"
-    "NAMESPACE of target \"nsdep-shared\" is not the same as the main target's"
+    FATAL_ERROR_MESSAGE "NAMESPACE of target \"nsdep-shared\" is not the same as the main target's"
 )
 
 TEST_RUN_AND_CHECK_OUTPUT(
     "${CMAKE_CURRENT_LIST_DIR}/test_fail/multiple_errors"
-    "Dependency notinstalleddep-shared is not installed"
+    FATAL_ERROR_MESSAGE "Dependency notinstalleddep-shared is not installed"
 )
 
 
