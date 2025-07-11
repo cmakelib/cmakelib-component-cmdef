@@ -5,7 +5,7 @@ Linux: ![buildbadge_github], Windows: ![buildbadge_github], Mac OS: ![buildbadge
 
 CMDEF aka **CMake-lib Definition Framework**
 
-CMake-lib provides consistent setting for built environment.
+CMake-lib provides consistent settings for build environment.
 It simplifies and maintains built option, libraries and executables.
 
 ## Requirements
@@ -17,7 +17,7 @@ It simplifies and maintains built option, libraries and executables.
 The library is not mainly intended for extending CMake functionality.
 
 It's set of wrappers and helpers which enables easily use of existing CMake
-features in a more standardised manner akross multiple project.
+features in a more standardised manner across multiple projects.
 
 ### Definition of Main target
 
@@ -31,7 +31,7 @@ must have own target in CMake project.
 By that target other project properties are referenced - installer name, application name, documentation etc.
 This type of target is called 'main target' (the 'object' for which the CMake project is created).
 
-The library 'main target' is represented by LIBRARY_GROUP argument wift suffix added according to a library type created.
+The library 'main target' is represented by LIBRARY_GROUP argument with suffix added according to a library type created.
 
 ## Usage
 
@@ -47,7 +47,7 @@ Component workflow
 
 - reset CMake default build flags by `CMDEF_CLEANUP`
 - set default build and link options  by `CMDEF_COMPILE_OPTIONS`, `CMDEF_LINK_OPTIONS`
-- set compile definitions by `CMDEF_COMPIE_DEFINITIONS`
+- set compile definitions by `CMDEF_COMPILE_DEFINITIONS`
 
 examples can be found at [example] directory.
 
@@ -72,7 +72,7 @@ Detailed documentation for each function can be found at the appropriate module.
 
 ## Documentation
 
-Every function has a comprehensive documentation writtend as part of the functcion definition.
+Every function has a comprehensive documentation written as part of the function definition.
 
 Context documentation is located at [doc/README.md]
 

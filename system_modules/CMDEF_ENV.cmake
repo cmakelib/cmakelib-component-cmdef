@@ -16,7 +16,7 @@ FIND_PACKAGE(CMLIB REQUIRED)
 #
 # It holds list of supported/well_tested architectures
 #
-# aplsil architecture referes to Apple silicon 
+# aplsil architecture refers to Apple silicon 
 #
 SET(_CMDEF_ENV_SUPPORTED_ARCH_LIST "x86-64" "x86" "aarch64" "aplsil")
 
@@ -122,7 +122,7 @@ MACRO(_CMDEF_ENV_SET_PACKAGE os_name)
 	)
 
 	IF(NOT DEFINED CMDEF_OS_NAME_UPPER)
-		MESSAGE(FATAL_ERROR "")
+		MESSAGE(FATAL_ERROR "CMDEF_OS_NAME_UPPER is not defined")
 	ENDIF()
 
 	SET(shared_var_name CMDEF_LIBRARY_NAME_SUFFIX_SHARED_${CMDEF_OS_NAME_UPPER})

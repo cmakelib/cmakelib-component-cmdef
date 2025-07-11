@@ -1,5 +1,5 @@
 
-# CMDEf cache variables
+# CMDEF cache variables
 
 Each section represent one Cache variable used in CMDEF.
 
@@ -43,7 +43,7 @@ Default build type if CMAKE_BUILD_TYPE is not specified.
 
 ## CMDEF_BUILD_TYPE_LIST:STRING,LIST=\<conditional>
 
-List of the supported byuld types. CMAKE_BUILD_TYPE must hold exactly one value from this list.
+List of the supported build types. CMAKE_BUILD_TYPE must hold exactly one value from this list.
 
 Type: String, List
 
@@ -67,7 +67,7 @@ It tries to set the variable in the following order
 1. filled from ENV variable CMDEF_DISTRO_ID if defined
 1. auto filled by CMDEF library (by `lsb_release` utility)
 
-## CMDEF_DISTRO_VERSION_ID:STRING=\<conditional\>
+## CMDEF_DISTRO_VERSION_ID:STRING=\<conditional>
 
 Distribution version ID (eg for debian bullseye: 11, ...). It always holds lowercase value...
 
