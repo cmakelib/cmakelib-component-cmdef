@@ -194,7 +194,7 @@ FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES)
 	FOREACH (dependency IN LISTS dependencies)
 		_CMDEF_PACKAGE_CHECK_DEPENDENCIES(
 				LIBRARY ${dependency}
-				__ALREADY_LINKED_LIBS ${dependencies}
+				ALREADY_LINKED_LIBS ${dependencies}
 		)
 	ENDFOREACH ()
 	_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF(
@@ -252,11 +252,11 @@ ENDFUNCTION()
 # HELPER
 # Used for checking transitive dependencies of the main target.
 # All those dependencies should be IMPORTED or linked directly to the main target.
-# Warns if the LIBRARY is not IMPORTED and is not in __ALREADY_LINKED_LIBS.
+# Warns if the LIBRARY is not IMPORTED and is not in ALREADY_LINKED_LIBS.
 #
 # <function>(
 # 	LIBRARY                <library>
-# 	__ALREADY_LINKED_LIBS  <already_linked_libs> M
+# 	ALREADY_LINKED_LIBS  <already_linked_libs> M
 # )
 #
 FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
@@ -264,10 +264,10 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
 		ONE_VALUE
 			LIBRARY
 		MULTI_VALUE
-			__ALREADY_LINKED_LIBS
+			ALREADY_LINKED_LIBS
 		REQUIRED
 			LIBRARY
-			__ALREADY_LINKED_LIBS
+			ALREADY_LINKED_LIBS
 		P_ARGN ${ARGN}
 	)
 	GET_TARGET_PROPERTY(linked_interfaces ${__LIBRARY} INTERFACE_LINK_LIBRARIES)
