@@ -10,7 +10,11 @@ It simplifies and maintains built option, libraries and executables.
 
 ## Requirements
 
-- [CMLIB] library installed 
+CMDEF is intended to be used thru [CMLIB].
+
+CMDEF is not supposed to be used separately.
+
+To use the library install [CMLIB] and call `FIND_PACKAGE(CMLIB COMPONENTS CMDEF)`
 
 ## General
 
