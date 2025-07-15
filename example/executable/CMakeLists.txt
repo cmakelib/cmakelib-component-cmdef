@@ -95,12 +95,3 @@ CMDEF_PACKAGE(
 #
 SET(CPACK_GENERATOR ZIP)
 INCLUDE(CPack)
-
-function(dump_cmake_variables)
-    get_cmake_property(_variableNames VARIABLES)
-    list (SORT _variableNames)
-    foreach (_variableName IN LISTS _variableNames)
-            message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-endfunction()
-dump_cmake_variables()
