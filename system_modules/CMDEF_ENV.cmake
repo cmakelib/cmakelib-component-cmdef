@@ -3,7 +3,6 @@
 # initialize base CMDEF CMake variables.
 #
 # Module relay on some CMake variables like
-# - CMAKE_SIZEOF_VOID_P (not defined for Script mode)
 # - CMAKE_CURRENT_BINARY_DIR (defined as "${CMAKE_CURRENT_LIST_DIR}" for script mode)
 #
 
@@ -17,7 +16,7 @@ FIND_PACKAGE(CMLIB REQUIRED)
 #
 # It holds list of supported/well_tested architectures
 #
-# aplsil architecture referes to Apple silicon 
+# aplsil architecture refers to Apple silicon 
 #
 SET(_CMDEF_ENV_SUPPORTED_ARCH_LIST "x86-64" "x86" "aarch64" "aplsil")
 
@@ -40,6 +39,7 @@ FUNCTION(CMDEF_ENV_INIT)
 	_CMDEF_ENV_SET_SUPPORTED_LANG()
 
 	IF(CMDEF_OS_WINDOWS)
+		_CMDEF_ENV_SET_WINDOWS_FLAGS()
 		IF(NOT CMDEF_WINDOWS_EXECUTABLE_MT)
 			FIND_PROGRAM(CMDEF_WINDOWS_EXECUTABLE_MT "mt.exe")
 			IF(${CMDEF_WINDOWS_EXECUTABLE_MT} STREQUAL "${prefix}WINDOWS_EXECUTABLE_MT-NOTFOUND")
@@ -122,7 +122,7 @@ MACRO(_CMDEF_ENV_SET_PACKAGE os_name)
 	)
 
 	IF(NOT DEFINED CMDEF_OS_NAME_UPPER)
-		MESSAGE(FATAL_ERROR "")
+		MESSAGE(FATAL_ERROR "CMDEF_OS_NAME_UPPER is not defined")
 	ENDIF()
 
 	SET(shared_var_name CMDEF_LIBRARY_NAME_SUFFIX_SHARED_${CMDEF_OS_NAME_UPPER})
@@ -204,7 +204,11 @@ ENDFUNCTION()
 # )
 #
 MACRO(_CMDEF_ENV_SET_OS)
-	CMAKE_HOST_SYSTEM_INFORMATION(RESULT _os_name QUERY OS_NAME)
+	IF(NOT DEFINED CMAKE_SYSTEM_NAME)
+		MESSAGE(FATAL_ERROR "CMAKE_SYSTEM_NAME is not defined!")
+	ENDIF()
+
+	SET(_os_name "${CMAKE_SYSTEM_NAME}")
 	MESSAGE(STATUS "System name: ${_os_name}")
 	SET(os_name "")
 	IF("${_os_name}" STREQUAL "Darwin" OR
@@ -281,7 +285,7 @@ MACRO(_CMDEF_ENV_SET_OS)
 		ENDIF()
 		SET(CMDEF_ARCHITECTURE ${arch}
 			CACHE STRING
-			"Achitecture for which we will compile"
+			"Architecture for which we will compile"
 		)
 	ENDIF()
 	MESSAGE(STATUS "Architecture: ${CMDEF_ARCHITECTURE}")
@@ -377,7 +381,7 @@ ENDMACRO()
 #
 FUNCTION(_CMDEF_ENV_SET_WINDOWS_FLAGS)
 	IF(NOT DEFINED CMDEF_OS_WINDOWS)
-		MESSAGE(FATAL_ERROR "Canot determine target OS. Not defined.")
+		MESSAGE(FATAL_ERROR "Cannot determine target OS. Not defined.")
 	ENDIF()
 	IF(NOT CMDEF_OS_WINDOWS)
 		RETURN()
@@ -404,7 +408,7 @@ FUNCTION(_CMDEF_ENV_SET_DESCRIPTION)
 	)
 	SET(CMDEF_ENV_DESCRIPTION_COPYRIGHT "${CMDEF_ENV_DESCRIPTION_COMPANY_NAME}"
 		CACHE STRING
-		"Copyrigth which will be added to binaries"
+		"Copyright which will be added to binaries"
 	)
 ENDFUNCTION()
 
@@ -429,22 +433,21 @@ FUNCTION(_CMDEF_ENV_GET_ARCH arch)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		FIND_PROGRAM(CMDEF_UNAME uname REQUIRED)
-		EXECUTE_PROCESS(COMMAND "${CMDEF_UNAME}" -m
-			OUTPUT_VARIABLE _arch
-			RESULT_VARIABLE result
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-		IF(NOT (result EQUAL 0))
-			MESSAGE(FATAL_ERROR "Cannot determine architecture! Set up CMDEF_ARCHITECTURE manually or repair uname")
-		ENDIF()
+		SET(_arch "${CMAKE_SYSTEM_PROCESSOR}")
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _arch_mapped "${_arch}")
 		STRING(TOLOWER "${_arch_mapped}" _arch_normalized)
+		IF(NOT _arch_normalized)
+			MESSAGE(FATAL_ERROR "Cannot determine system architecture."
+				" It seems the system has system arch set to empty or invalid string."
+				" Consult os-release file."
+			)
+		ENDIF()
 		SET(${arch} "${_arch_normalized}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
 	MESSAGE(FATAL_ERROR "Cannot get architecture for unknown OS ${CMDEF_OS_NAME}")
 ENDFUNCTION()
+
 
 
 ## Helper
@@ -465,17 +468,15 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_ID distro_id)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
-		EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -i -s
-			OUTPUT_VARIABLE _distro_id
-			RESULT_VARIABLE result
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-		IF(NOT (result EQUAL 0))
-			MESSAGE(FATAL_ERROR "Cannot determine distro ID! Set up CMDEF_DISTRO_ID manually or repair lsb_release")
-		ENDIF()
+		CMAKE_HOST_SYSTEM_INFORMATION(RESULT _distro_id QUERY DISTRIB_ID)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _distro_id_mapped "${_distro_id}")
 		STRING(TOLOWER "${_distro_id_mapped}" _distro_id_normalized)
+		IF(NOT _distro_id_normalized)
+			MESSAGE(FATAL_ERROR "Cannot determine Distro ID."
+				" It seems the system has Distro ID set to empty or invalid string."
+				" Consult os-release file."
+			)
+		ENDIF()
 		SET(${distro_id} "${_distro_id_normalized}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()
@@ -502,17 +503,15 @@ FUNCTION(_CMDEF_ENV_GET_DISTRO_VERSION_ID version_id)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		FIND_PROGRAM(CMDEF_LSB_RELEASE lsb_release REQUIRED)
-		EXECUTE_PROCESS(COMMAND "${CMDEF_LSB_RELEASE}" -r -s
-			OUTPUT_VARIABLE _version_id
-			RESULT_VARIABLE result
-			OUTPUT_STRIP_TRAILING_WHITESPACE
-		)
-		IF(NOT (result EQUAL 0))
-			MESSAGE(FATAL_ERROR "Cannot determine version ID! Set up CMDEF_DISTRO_VERSION_ID manually or repair lsb_release")
-		ENDIF()
+		CMAKE_HOST_SYSTEM_INFORMATION(RESULT _version_id QUERY DISTRIB_VERSION_ID)
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _version_id_mapped "${_version_id}")
 		STRING(TOLOWER "${_version_id_mapped}" _version_id_normalized)
+		IF(NOT _version_id_normalized)
+			MESSAGE(FATAL_ERROR "Cannot determine Distro Version ID."
+				" It seems the system has Distro Version ID set to empty or invalid string."
+				" Consult os-release file."
+			)
+		ENDIF()
 		SET(${version_id} "${_version_id_normalized}" PARENT_SCOPE)
 		RETURN()
 	ENDIF()

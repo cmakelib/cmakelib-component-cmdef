@@ -81,6 +81,7 @@ FUNCTION(CMDEF_PACKAGE)
 
 	CMDEF_ADD_LIBRARY_CHECK(${__MAIN_TARGET} cmdef_library)
 	CMDEF_ADD_EXECUTABLE_CHECK(${__MAIN_TARGET} cmdef_executable)
+	CMUTIL_VERSION_CHECK(${__VERSION})
 	
 	SET(CMDEF_PACKAGE_TARGETS_TO_INCLUDE)
 	IF(DEFINED cmdef_library OR DEFINED cmdef_executable)
@@ -193,7 +194,7 @@ FUNCTION(_CMDEF_PACKAGE_FIND_AND_CHECK_DEPENDENCIES)
 	FOREACH (dependency IN LISTS dependencies)
 		_CMDEF_PACKAGE_CHECK_DEPENDENCIES(
 				LIBRARY ${dependency}
-				__ALREADY_LINKED_LIBS ${dependencies}
+				ALREADY_LINKED_LIBS ${dependencies}
 		)
 	ENDFOREACH ()
 	_CMDEF_PACKAGE_CHECK_IF_DEPENDENCIES_INSTALLED_BY_CMDEF(
@@ -251,11 +252,11 @@ ENDFUNCTION()
 # HELPER
 # Used for checking transitive dependencies of the main target.
 # All those dependencies should be IMPORTED or linked directly to the main target.
-# Warns if the LIBRARY is not IMPORTED and is not in __ALREADY_LINKED_LIBS.
+# Warns if the LIBRARY is not IMPORTED and is not in ALREADY_LINKED_LIBS.
 #
 # <function>(
 # 	LIBRARY                <library>
-# 	__ALREADY_LINKED_LIBS  <already_linked_libs> M
+# 	ALREADY_LINKED_LIBS  <already_linked_libs> M
 # )
 #
 FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
@@ -263,10 +264,10 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
 		ONE_VALUE
 			LIBRARY
 		MULTI_VALUE
-			__ALREADY_LINKED_LIBS
+			ALREADY_LINKED_LIBS
 		REQUIRED
 			LIBRARY
-			__ALREADY_LINKED_LIBS
+			ALREADY_LINKED_LIBS
 		P_ARGN ${ARGN}
 	)
 	GET_TARGET_PROPERTY(linked_interfaces ${__LIBRARY} INTERFACE_LINK_LIBRARIES)
@@ -283,7 +284,7 @@ FUNCTION(_CMDEF_PACKAGE_CHECK_DEPENDENCIES)
 			CONTINUE()
 		ENDIF ()
 		IF (NOT "${linked_lib}" IN_LIST ____ALREADY_LINKED_LIBS)
-			MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${__LIBRARY}, but is a NOT IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}")
+			MESSAGE(WARNING "Library ${linked_lib} is a dependency of ${__LIBRARY}, but is NOT an IMPORTED target and it is not direct dependency of ${__MAIN_TARGET}. Dependency ${__LIBRARY} should be linked directly to ${__MAIN_TARGET} instead if it is intended to be exported with the package.")
 		ENDIF ()
 	ENDFOREACH ()
 ENDFUNCTION()

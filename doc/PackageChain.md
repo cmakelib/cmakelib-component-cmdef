@@ -50,7 +50,7 @@ CMDEF_ADD_EXECUTABLE(
 
 Configure installation of a target, that will export it and create the target's `.cmake` file.
 
-`NAMESPACE` is **required** when using the whole chain and it must be **equal** to the name of the **main target**.
+`NAMESPACE` is **optional** but **recommended** when using the whole chain. When specified, it must be **equal** to the name of the **main target** and end with `::`. If using `CMDEF_PACKAGE`, the namespace consistency is validated automatically.
 > **main target** - the 'object' for which we create the CMake project. It relates to CMDEF_PACKAGE
 
 #### Example
@@ -106,7 +106,7 @@ make install  # Install cmake files, mylib-shared.so and myexecutable to <instal
 cpack         # Create archive libmylib-shared-dev_1.0.0_<architecture>.zip
 ```
 
-> Note that when `CMAKE_BUILD_TYPE=Debug`, the libraries and executables **OUTPUT_NAME** will have a suffix `d` added to them.
+> Note that when `CMAKE_BUILD_TYPE=Debug`, the libraries and executables **OUTPUT_NAME** will have a debug suffix added to them (controlled by `CMDEF_EXECUTABLE_NAME_DEBUG_SUFFIX`, typically `d`).
 
 The created package has the following structure:
 
