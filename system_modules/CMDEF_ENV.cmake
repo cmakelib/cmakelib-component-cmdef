@@ -204,11 +204,14 @@ ENDFUNCTION()
 # )
 #
 MACRO(_CMDEF_ENV_SET_OS)
+	SET(_system_name)
 	IF(NOT DEFINED CMAKE_SYSTEM_NAME)
-		MESSAGE(FATAL_ERROR "CMAKE_SYSTEM_NAME is not defined!")
+		CMAKE_HOST_SYSTEM_INFORMATION(RESULT _system_name QUERY OS_NAME)
+	ELSE()
+		SET(_system_name "${CMAKE_SYSTEM_NAME}")
 	ENDIF()
 
-	SET(_os_name "${CMAKE_SYSTEM_NAME}")
+	SET(_os_name "${_system_name}")
 	MESSAGE(STATUS "System name: ${_os_name}")
 	SET(os_name "")
 	IF("${_os_name}" STREQUAL "Darwin" OR
@@ -433,7 +436,20 @@ FUNCTION(_CMDEF_ENV_GET_ARCH arch)
 		RETURN()
 	ENDIF()
 	IF(CMDEF_OS_LINUX)
-		SET(_arch "${CMAKE_SYSTEM_PROCESSOR}")
+		SET(_arch)
+		IF(DEFINED CMAKE_SYSTEM_PROCESSOR)
+			SET(_arch "${CMAKE_SYSTEM_PROCESSOR}")
+		ELSE()
+			FIND_PROGRAM(uname_exe uname NO_CACHE REQUIRED)
+			EXECUTE_PROCESS(
+				COMMAND ${uname_exe} -m
+				OUTPUT_VARIABLE _arch
+				RESULT_VARIABLE result
+			)
+			IF(NOT result EQUAL 0)
+				MESSAGE(FATAL_ERROR "Cannot determine system architecture. uname -m failed")
+			ENDIF()
+		ENDIF()
 		STRING(REGEX REPLACE "[^a-zA-Z0-9.]" "-" _arch_mapped "${_arch}")
 		STRING(TOLOWER "${_arch_mapped}" _arch_normalized)
 		IF(NOT _arch_normalized)
