@@ -446,6 +446,7 @@ FUNCTION(_CMDEF_ENV_GET_ARCH arch)
 				OUTPUT_VARIABLE _arch
 				RESULT_VARIABLE result
 			)
+			STRING(REGEX REPLACE "\n" "" _arch "${_arch}")
 			IF(NOT result EQUAL 0)
 				MESSAGE(FATAL_ERROR "Cannot determine system architecture. uname -m failed")
 			ENDIF()
