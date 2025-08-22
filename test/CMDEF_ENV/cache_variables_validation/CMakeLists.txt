@@ -6,6 +6,8 @@
 # are properly set with expected values for each supported platform (Linux, macOS, Windows).
 # Also tests environment variable support.
 #
+# It tests only variables which are shared across all platforms.
+#
 
 CMAKE_MINIMUM_REQUIRED(VERSION 3.22)
 PROJECT(CMDEF_ENV_CACHE_VARIABLES_TEST)
@@ -26,12 +28,6 @@ INCLUDE("${CMAKE_CURRENT_LIST_DIR}/../../../system_modules/CMDEF_ENV.cmake")
 # <function>()
 #
 FUNCTION(TEST_LINUX_CACHE_VARIABLES)
-    IF(NOT CMDEF_OS_LINUX)
-        MESSAGE(STATUS "Skipping Linux cache variables test - not running on Linux")
-        RETURN()
-    ENDIF()
-
-    MESSAGE(STATUS "Testing CMDEF_ENV cache variables for Linux platform")
 
     # OS Detection Variables
     TEST_VAR_VALUE_EQUAL(CMDEF_OS_NAME "linux")
@@ -42,9 +38,7 @@ FUNCTION(TEST_LINUX_CACHE_VARIABLES)
     TEST_VAR_FALSE(CMDEF_OS_MACOS)
     TEST_VAR_TRUE(CMDEF_OS_POSIX)
 
-    # Architecture Variables
     TEST_VAR_DEFINED(CMDEF_ARCHITECTURE)
-    # Linux architecture should be one of the supported ones
     SET(supported_archs "x86-64" "x86" "aarch64" "aplsil")
     LIST(FIND supported_archs "${CMDEF_ARCHITECTURE}" arch_found)
     IF(arch_found EQUAL -1)
@@ -84,11 +78,9 @@ FUNCTION(TEST_LINUX_CACHE_VARIABLES)
     CMAKE_PATH(CONVERT "${CMDEF_BINARY_INSTALL_DIR}" TO_CMAKE_PATH_LIST _normalized)
     TEST_VAR_VALUE_EQUAL(_normalized "bin")
 
-    # Naming Convention Variables
     TEST_VAR_VALUE_EQUAL(CMDEF_ENV_NAME_SEPARATOR "_")
     TEST_VAR_VALUE_EQUAL(CMDEF_ENV_NAMESPACE_SUFFIX "::")
 
-    # Supported Languages
     TEST_VAR_DEFINED(CMDEF_SUPPORTED_LANG_LIST)
     SET(expected_langs "C" "CXX" "OBJC" "OBJCXX" "RC")
     FOREACH(lang IN LISTS expected_langs)
@@ -98,14 +90,11 @@ FUNCTION(TEST_LINUX_CACHE_VARIABLES)
         ENDIF()
     ENDFOREACH()
 
-    # Output Directory Variables
     TEST_VAR_DEFINED(CMDEF_TARGET_OUTPUT_DIRECTORY)
 
-    # Description Variables
     TEST_VAR_VALUE_EQUAL(CMDEF_ENV_DESCRIPTION_COMPANY_NAME "Company name")
     TEST_VAR_VALUE_EQUAL(CMDEF_ENV_DESCRIPTION_COPYRIGHT "Company name")
 
-    # Multi-config Variables
     TEST_VAR_VALUE_EQUAL(CMDEF_MULTICONF_FOLDER_NAME "CMDEF")
 
     MESSAGE(STATUS "Linux cache variables validation passed")
@@ -120,12 +109,6 @@ ENDFUNCTION()
 # <function>()
 #
 FUNCTION(TEST_MACOS_CACHE_VARIABLES)
-    IF(NOT CMDEF_OS_MACOS)
-        MESSAGE(STATUS "Skipping macOS cache variables test - not running on macOS")
-        RETURN()
-    ENDIF()
-
-    MESSAGE(STATUS "Testing CMDEF_ENV cache variables for macOS platform")
 
     TEST_VAR_VALUE_EQUAL(CMDEF_OS_NAME "macos")
     TEST_VAR_VALUE_EQUAL(CMDEF_OS_NAME_SHORT "mac")
@@ -197,13 +180,6 @@ ENDFUNCTION()
 # <function>()
 #
 FUNCTION(TEST_WINDOWS_CACHE_VARIABLES)
-    IF(NOT CMDEF_OS_WINDOWS)
-        MESSAGE(STATUS "Skipping Windows cache variables test - not running on Windows")
-        RETURN()
-    ENDIF()
-
-    MESSAGE(STATUS "Testing CMDEF_ENV cache variables for Windows platform")
-
     TEST_VAR_VALUE_EQUAL(CMDEF_OS_NAME "windows")
     TEST_VAR_VALUE_EQUAL(CMDEF_OS_NAME_SHORT "win")
     TEST_VAR_VALUE_EQUAL(CMDEF_OS_NAME_UPPER "WINDOWS")
@@ -244,7 +220,6 @@ FUNCTION(TEST_WINDOWS_CACHE_VARIABLES)
     TEST_VAR_VALUE_EQUAL(CMDEF_ENV_NAME_SEPARATOR "_")
     TEST_VAR_VALUE_EQUAL(CMDEF_ENV_NAMESPACE_SUFFIX "::")
 
-    # Supported Languages
     TEST_VAR_DEFINED(CMDEF_SUPPORTED_LANG_LIST)
     SET(expected_langs "C" "CXX" "OBJC" "OBJCXX" "RC")
     FOREACH(lang IN LISTS expected_langs)
@@ -367,8 +342,12 @@ FUNCTION(TEST_ENVIRONMENT_VARIABLES)
     MESSAGE(STATUS "Environment variable support validation passed")
 ENDFUNCTION()
 
-TEST_LINUX_CACHE_VARIABLES()
-TEST_MACOS_CACHE_VARIABLES()
-TEST_WINDOWS_CACHE_VARIABLES()
+IF(CMDEF_OS_LINUX)
+    TEST_LINUX_CACHE_VARIABLES()
+ELSEIF(CMDEF_OS_MACOS)
+    TEST_MACOS_CACHE_VARIABLES()
+ELSEIF(CMDEF_OS_WINDOWS)
+    TEST_WINDOWS_CACHE_VARIABLES()
+ENDIF()
 TEST_COMMON_CACHE_VARIABLES()
 TEST_ENVIRONMENT_VARIABLES()
